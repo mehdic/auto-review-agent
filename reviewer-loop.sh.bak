@@ -1,0 +1,72 @@
+#!/bin/bash
+# Reviewer agent continuous monitoring loop
+
+PROJECT_PATH="$1"
+SPEC_FILE="$2"
+FEATURE_NAME="$3"
+REVIEWER_PROMPT="$4"
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${BLUE}✅ REVIEWER LOOP - Starting continuous monitoring${NC}"
+echo "Monitoring for proposals in: $PROJECT_PATH/coordination/task_proposals.json"
+
+while true; do
+  # Check if there are proposals awaiting review
+  if [ -f "$PROJECT_PATH/coordination/task_proposals.json" ] && grep -q '"awaiting_review"' "$PROJECT_PATH/coordination/task_proposals.json" 2>/dev/null; then
+    echo -e "${BLUE}✅ REVIEWER: Found proposals to review!${NC}"
+    
+    # Create a temporary file with the complete prompt
+    TEMP_FILE=$(mktemp /tmp/reviewer_prompt.XXXXXX)
+    
+    # Write the prompt content to temp file
+    {
+      cat "$REVIEWER_PROMPT"
+      echo ""
+      echo "═══════════════════════════════════════════════════════════════"
+      echo "CURRENT PROPOSALS TO REVIEW"
+      echo "═══════════════════════════════════════════════════════════════"
+      cat "$PROJECT_PATH/coordination/task_proposals.json" 2>/dev/null || echo '{}'
+      echo ""
+      echo "═══════════════════════════════════════════════════════════════"
+      echo "SPEC FILE CONTENT"
+      echo "═══════════════════════════════════════════════════════════════"
+      cat "$SPEC_FILE"
+      echo ""
+      echo "═══════════════════════════════════════════════════════════════"
+      echo "YOUR TASK"
+      echo "═══════════════════════════════════════════════════════════════"
+      echo ""
+      echo "You are in project directory: $PROJECT_PATH"
+      echo "Feature: $FEATURE_NAME"
+      echo ""
+      echo "The planner has submitted proposals for review. You need to:"
+      echo "1. Evaluate each proposal against the spec"
+      echo "2. Choose the best approach"
+      echo "3. Update coordination/task_proposals.json with status: approved"
+      echo "4. Add your chosen_approach, reviewer_notes, and implementation_instructions"
+      echo ""
+      echo "After approving, the planner will implement autonomously."
+      echo "Remember: This is for fixing 75 remaining tests in StockMonitor (108/183 passing)."
+      echo ""
+      echo "Start your review and approval process now."
+    } > "$TEMP_FILE"
+    
+    # Send to Claude
+    cat "$TEMP_FILE" | claude
+    
+    # Clean up
+    rm -f "$TEMP_FILE"
+    
+    # After review, wait before checking again
+    echo -e "${YELLOW}Review complete. Waiting 60 seconds before next check...${NC}"
+    sleep 60
+  else
+    echo -e "${YELLOW}Waiting for proposals... (checking every 30s)${NC}"
+    sleep 30
+  fi
+done
