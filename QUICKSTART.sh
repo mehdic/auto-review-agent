@@ -18,11 +18,8 @@ STEP 1: Install Prerequisites
 Ubuntu/Debian: sudo apt install tmux jq
 macOS:         brew install tmux jq
 
-# Install Claude Code
-npm install -g claude
-
-# Authenticate Claude
-claude auth login
+# Install Codex CLI (see official instructions)
+codex auth login
 
 
 ═══════════════════════════════════════════════════════════════
@@ -164,7 +161,7 @@ TROUBLESHOOTING
 ═══════════════════════════════════════════════════════════════
 
 Problem: Agents not starting
-→ Check: claude auth login
+→ Check: codex auth login
 
 Problem: No communication between agents
 → Check logs: tail -f /your/project/coordination/logs/notifications.log

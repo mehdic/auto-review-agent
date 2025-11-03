@@ -4,6 +4,24 @@
 PROJECT_PATH="/Users/mchaouachi/IdeaProjects/StockMonitor"
 AGENT_SYSTEM="/Users/mchaouachi/agent-system"
 PROPOSALS_FILE="$PROJECT_PATH/coordination/task_proposals.json"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_MODEL="${LLM_MODEL:-}"
+if [[ -z "${LLM_ARGS:-}" && -n "${LLM_ARGS_AUTO:-}" ]]; then
+    LLM_ARGS="$LLM_ARGS_AUTO"
+fi
+LLM_ARGS="${LLM_ARGS:-}"
+export LLM_BIN LLM_MODEL LLM_ARGS
+LLM_SH="$AGENT_SYSTEM/scripts/llm.sh"
+if ! command -v "$LLM_BIN" &> /dev/null; then
+    echo -e "${RED}Missing LLM CLI: $LLM_BIN${NC}"
+    exit 1
+fi
+if [ ! -x "$LLM_SH" ]; then
+    echo -e "${RED}Missing LLM shim at $LLM_SH${NC}"
+    exit 1
+fi
+LLM_SH_ESCAPED=$(printf '%q' "$LLM_SH")
+LLM_REPL_CMD="$LLM_SH_ESCAPED repl"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -41,24 +59,24 @@ if [[ "$PLANNER_STATE" == *"Waiting"* ]] || [[ "$PLANNER_STATE" == *"waiting"* ]
 fi
 
 if [[ "$PLANNER_STATE" == *"$"* ]] || [[ "$PLANNER_STATE" == *"#"* ]] || [[ "$PLANNER_STATE" == *"%"* ]]; then
-    echo -e "${YELLOW}Planner at command prompt. Starting Claude...${NC}"
-    NEEDS_CLAUDE=1
-elif [[ "$PLANNER_STATE" == *"claude"* ]] && [[ "$PLANNER_STATE" != *"implementation"* ]]; then
-    echo -e "${YELLOW}Claude is running but not implementing. Sending instructions...${NC}"
+    echo -e "${YELLOW}Planner at command prompt. Starting $LLM_BIN...${NC}"
+    NEEDS_LLM=1
+elif [[ "$PLANNER_STATE" == *"$LLM_BIN"* ]] && [[ "$PLANNER_STATE" != *"implementation"* ]]; then
+    echo -e "${YELLOW}$LLM_BIN is running but not implementing. Sending instructions...${NC}"
     NEEDS_INSTRUCTIONS=1
 else
     echo -e "${YELLOW}Unknown state. Will try to start implementation...${NC}"
-    NEEDS_CLAUDE=1
+    NEEDS_LLM=1
 fi
 
 echo ""
 echo -e "${GREEN}Forcing implementation to start...${NC}"
 
-if [ "$NEEDS_CLAUDE" == "1" ]; then
-    echo "Starting Claude..."
+if [ "$NEEDS_LLM" == "1" ]; then
+    echo "Starting $LLM_BIN..."
     tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH" Enter
     sleep 1
-    tmux send-keys -t agent_system_spec:planner "claude" Enter
+    tmux send-keys -t agent_system_spec:planner "$LLM_REPL_CMD" Enter
     sleep 4
 fi
 
@@ -103,5 +121,5 @@ echo ""
 echo "If still not working, try the nuclear option:"
 echo "tmux kill-window -t agent_system_spec:planner"
 echo "tmux new-window -t agent_system_spec:planner -n planner -c $PROJECT_PATH"
-echo "tmux send-keys -t agent_system_spec:planner 'claude' Enter"
+echo "tmux send-keys -t agent_system_spec:planner './scripts/llm.sh repl' Enter"
 echo "Then paste the implementation instructions again."

@@ -1,6 +1,6 @@
 # 🤖 Autonomous Agent Coordination System
 
-A complete system for running autonomous Claude Code agents that communicate with each other via tmux, allowing you to observe and intervene when needed.
+A complete system for running autonomous LLM coding agents via tmux. The toolkit is vendor-neutral and ships with a wrapper that defaults to OpenAI's **Codex CLI** while still supporting Anthropic's **Claude Code** for rollback.
 
 ## 🎯 What This Does
 
@@ -20,29 +20,27 @@ Before starting, ensure you have:
   ```bash
   # Ubuntu/Debian
   sudo apt install tmux
-  
+
   # macOS
   brew install tmux
   ```
 
-- **Claude Code** - Anthropic's CLI tool
-  ```bash
-  npm install -g claude
-  ```
+- **LLM CLI**
+  - Install the **Codex CLI** and authenticate (`codex auth login`).
+  - Optional: install the Claude CLI if you plan to run with `LLM_BIN=claude`.
 
 - **jq** - JSON processor (for monitoring)
   ```bash
   # Ubuntu/Debian
   sudo apt install jq
-  
+
   # macOS
   brew install jq
   ```
 
-- **Claude API Access** - Either:
-  - Claude Pro subscription ($20/month)
-  - Claude Max subscription ($200/month) - Recommended for heavy use
-  - Or API key for pay-per-use
+- **Model access**
+  - Codex CLI: ensure your OpenAI account has access to the chosen model.
+  - Claude CLI fallback: Claude Pro/Max subscription or API key.
 
 ## 🚀 Quick Start
 
@@ -99,6 +97,31 @@ The system automatically attaches you to the tmux session. You'll see:
 - **Window 1 (reviewer)** - The reviewer agent monitoring and evaluating
 - **Window 2 (monitor)** - Real-time coordination dashboard
 - **Window 3 (logs)** - Live activity logs
+
+## ⚙️ LLM Shim & Environment
+
+All agent scripts call `./scripts/llm.sh`, a thin wrapper that normalizes Codex and Claude CLI flags. Configure behavior with environment variables (stored in `.env.migration` or exported inline):
+
+| Variable | Description |
+| --- | --- |
+| `LLM_BIN` | Which CLI to launch (`codex` by default, `claude` for rollback). |
+| `LLM_MODEL` | Optional model name passed to the CLI. |
+| `LLM_ARGS` | Extra flags forwarded to the CLI (space-separated). |
+| `LLM_ARGS_CAUTIOUS` | Preset for review/approval mode. Auto-applied when `LLM_ARGS` is empty. |
+| `LLM_ARGS_AUTO` | Preset for unattended mode (use only in secure containers). |
+
+Examples:
+
+```bash
+# Run planner in cautious mode
+LLM_ARGS_CAUTIOUS="--output json" ./launch-agents.sh /path/to/project "Summarize open issues"
+
+# Force Codex auto-mode inside CI
+LLM_BIN=codex LLM_ARGS="$LLM_ARGS_AUTO" ./scripts/llm.sh chat "Run tests"
+
+# Roll back to Claude temporarily
+LLM_BIN=claude ./scripts/llm.sh chat "List files touched today"
+```
 
 ## 🎮 Tmux Controls
 
@@ -365,20 +388,19 @@ You can add a third agent (e.g., a QA tester):
 
 ### Change Model
 
-By default, agents use Claude Sonnet. To change:
+Set `LLM_MODEL` before launching or in `.env.migration`:
 ```bash
-# In launch-agents.sh, modify the claude command:
-claude --model claude-opus-4
+LLM_MODEL=gpt-4.1 ./launch-agents.sh ~/project "Refactor the scheduler"
 ```
 
 ## 🐛 Troubleshooting
 
 ### Agents Not Starting
 
-**Problem:** Claude Code fails to start
+**Problem:** LLM CLI fails to start
 **Solution:** Make sure you're authenticated:
 ```bash
-claude auth login
+codex auth login  # or claude auth login when LLM_BIN=claude
 ```
 
 ### Agents Not Communicating
@@ -391,11 +413,10 @@ claude auth login
 
 ### Permission Errors
 
-**Problem:** Claude keeps asking for permissions
-**Solution:** Use danger mode (only if you trust your setup):
+**Problem:** CLI keeps asking for permissions
+**Solution:** Configure `LLM_ARGS_AUTO` for trusted automation and export it only in secure environments:
 ```bash
-# In launch-agents.sh, modify:
-claude --project . --dangerously-skip-permissions
+LLM_ARGS_AUTO="--auto-approve"  # example flag, adjust per CLI
 ```
 
 ### Tmux Not Found
@@ -415,7 +436,7 @@ brew install tmux
 **Problem:** Tmux windows are blank
 **Solution:**
 1. Make sure prompts loaded: `ls -la prompts/`
-2. Check Claude is installed: `which claude`
+2. Check the configured CLI is installed: `which ${LLM_BIN:-codex}`
 3. Try attaching: `tmux attach -t agent_system`
 
 ## 📚 Advanced Usage

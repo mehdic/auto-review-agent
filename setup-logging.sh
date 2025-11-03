@@ -81,31 +81,34 @@ cat > "$LOG_DIR/capture_tmux.sh" << 'EOF'
 
 PROJECT_PATH="$1"
 LOG_DIR="$PROJECT_PATH/coordination/logs"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_LABEL="${LLM_LABEL:-${LLM_BIN^^}}"
+LLM_LOG_FILE="$LOG_DIR/combined/${LLM_BIN}_conversations.log"
 
 while tmux has-session -t agent_system_spec 2>/dev/null; do
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-  
+
   # Capture planner pane
   echo "=== PLANNER CAPTURE at $(date) ===" >> "$LOG_DIR/planner/captures.log"
   tmux capture-pane -t agent_system_spec:planner -p >> "$LOG_DIR/planner/captures.log"
   echo -e "\n---\n" >> "$LOG_DIR/planner/captures.log"
-  
+
   # Capture reviewer pane
   echo "=== REVIEWER CAPTURE at $(date) ===" >> "$LOG_DIR/reviewer/captures.log"
   tmux capture-pane -t agent_system_spec:reviewer -p >> "$LOG_DIR/reviewer/captures.log"
   echo -e "\n---\n" >> "$LOG_DIR/reviewer/captures.log"
-  
-  # Extract Claude conversations
-  if grep -q "claude" "$LOG_DIR/planner/captures.log"; then
-    echo "=== PLANNER CLAUDE INTERACTION at $(date) ===" >> "$LOG_DIR/combined/claude_conversations.log"
-    tail -50 "$LOG_DIR/planner/captures.log" | grep -A 20 -B 5 "claude" >> "$LOG_DIR/combined/claude_conversations.log"
+
+  # Extract LLM conversations
+  if grep -q "$LLM_BIN" "$LOG_DIR/planner/captures.log"; then
+    echo "=== PLANNER ${LLM_LABEL} INTERACTION at $(date) ===" >> "$LLM_LOG_FILE"
+    tail -50 "$LOG_DIR/planner/captures.log" | grep -A 20 -B 5 "$LLM_BIN" >> "$LLM_LOG_FILE"
   fi
-  
-  if grep -q "claude" "$LOG_DIR/reviewer/captures.log"; then
-    echo "=== REVIEWER CLAUDE INTERACTION at $(date) ===" >> "$LOG_DIR/combined/claude_conversations.log"
-    tail -50 "$LOG_DIR/reviewer/captures.log" | grep -A 20 -B 5 "claude" >> "$LOG_DIR/combined/claude_conversations.log"
+
+  if grep -q "$LLM_BIN" "$LOG_DIR/reviewer/captures.log"; then
+    echo "=== REVIEWER ${LLM_LABEL} INTERACTION at $(date) ===" >> "$LLM_LOG_FILE"
+    tail -50 "$LOG_DIR/reviewer/captures.log" | grep -A 20 -B 5 "$LLM_BIN" >> "$LLM_LOG_FILE"
   fi
-  
+
   sleep 30
 done
 EOF
@@ -119,6 +122,9 @@ cat > view-logs.sh << 'EOF'
 
 PROJECT_PATH="${1:-/Users/mchaouachi/IdeaProjects/StockMonitor}"
 LOG_DIR="$PROJECT_PATH/coordination/logs"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_LABEL="${LLM_LABEL:-${LLM_BIN^^}}"
+LLM_LOG_FILE="$LOG_DIR/combined/${LLM_BIN}_conversations.log"
 
 while true; do
   clear
@@ -130,13 +136,13 @@ while true; do
   echo "1) Combined agent history"
   echo "2) Planner sessions"
   echo "3) Reviewer sessions"
-  echo "4) Claude conversations"
+  echo "4) ${LLM_LABEL} conversations"
   echo "5) Latest activity (tail -f)"
   echo "6) Search logs"
   echo "0) Exit"
   echo ""
   read -p "Choice: " choice
-  
+
   case $choice in
     1)
       less "$LOG_DIR/combined/agent_history.log"
@@ -152,7 +158,7 @@ while true; do
       less "$LOG_DIR/reviewer/$fname"
       ;;
     4)
-      less "$LOG_DIR/combined/claude_conversations.log"
+      less "$LLM_LOG_FILE"
       ;;
     5)
       tail -f "$LOG_DIR/combined/agent_history.log"
@@ -165,7 +171,7 @@ while true; do
       exit 0
       ;;
   esac
-  
+
   echo ""
   read -p "Press Enter to continue..."
 done
@@ -230,7 +236,7 @@ echo ""
 echo -e "${BLUE}Log Locations:${NC}"
 echo "  📁 All logs: $LOG_DIR/"
 echo "  📄 Combined: $LOG_DIR/combined/agent_history.log"
-echo "  💬 Claude: $LOG_DIR/combined/claude_conversations.log"
+echo "  💬 LLM transcripts: $LOG_DIR/combined/${LLM_BIN:-codex}_conversations.log"
 echo "  🔄 JSON: $LOG_DIR/combined/json_events.log"
 echo ""
 echo -e "${BLUE}View logs with:${NC}"

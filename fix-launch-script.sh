@@ -59,6 +59,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_PATH="$(cd "$PROJECT_PATH" && pwd)"
 PLANNER_PROMPT="$SCRIPT_DIR/prompts/planner_agent_spec.txt"
 REVIEWER_PROMPT="$SCRIPT_DIR/prompts/reviewer_agent_spec.txt"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_MODEL="${LLM_MODEL:-}"
+if [[ -z "${LLM_ARGS:-}" && -n "${LLM_ARGS_CAUTIOUS:-}" ]]; then
+    LLM_ARGS="$LLM_ARGS_CAUTIOUS"
+fi
+LLM_ARGS="${LLM_ARGS:-}"
+export LLM_BIN LLM_MODEL LLM_ARGS
+LLM_SH="$SCRIPT_DIR/scripts/llm.sh"
+
+if ! command -v "$LLM_BIN" &> /dev/null; then
+    echo -e "${RED}❌ $LLM_BIN CLI is not installed.${NC}"
+    exit 1
+fi
+if [ ! -x "$LLM_SH" ]; then
+    echo -e "${RED}❌ LLM shim not found at $LLM_SH.${NC}"
+    exit 1
+fi
 
 echo -e "${BLUE}Configuration:${NC}"
 echo "  Project: $PROJECT_PATH"
@@ -87,8 +104,8 @@ if [ -f "$SCRIPT_DIR/planner-loop.sh" ]; then
     chmod +x "$SCRIPT_DIR/planner-loop.sh"
     tmux send-keys -t $SESSION_NAME:planner "$SCRIPT_DIR/planner-loop.sh '$PROJECT_PATH' '$SPEC_FILE' '$FEATURE_NAME' '$PLANNER_PROMPT'" Enter
 else
-    # Fallback: Start claude and send a simple file-based command
-    tmux send-keys -t $SESSION_NAME:planner "claude" Enter
+    # Fallback: Start LLM repl and send a simple file-based command
+    tmux send-keys -t $SESSION_NAME:planner "$LLM_SH" Space "repl" Enter
     sleep 2
     tmux send-keys -t $SESSION_NAME:planner "Read $PLANNER_PROMPT and $SPEC_FILE. Create proposals in $PROJECT_PATH/coordination/task_proposals.json" Enter
 fi

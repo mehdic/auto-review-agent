@@ -3,6 +3,9 @@
 
 PROJECT_PATH="${1:-/Users/mchaouachi/IdeaProjects/StockMonitor}"
 LOG_DIR="$PROJECT_PATH/coordination/logs"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_LABEL="${LLM_LABEL:-${LLM_BIN^^}}"
+LLM_LOG_FILE="$LOG_DIR/combined/${LLM_BIN}_conversations.log"
 
 while true; do
   clear
@@ -14,7 +17,7 @@ while true; do
   echo "1) Combined agent history"
   echo "2) Planner sessions"
   echo "3) Reviewer sessions"
-  echo "4) Claude conversations"
+  echo "4) ${LLM_LABEL} conversations"
   echo "5) Latest activity (tail -f)"
   echo "6) Search logs"
   echo "0) Exit"
@@ -36,7 +39,7 @@ while true; do
       less "$LOG_DIR/reviewer/$fname"
       ;;
     4)
-      less "$LOG_DIR/combined/claude_conversations.log"
+      less "$LLM_LOG_FILE"
       ;;
     5)
       tail -f "$LOG_DIR/combined/agent_history.log"

@@ -4,6 +4,18 @@
 
 PROJECT_PATH="/Users/mchaouachi/IdeaProjects/StockMonitor"
 AGENT_SYSTEM="/Users/mchaouachi/agent-system"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_MODEL="${LLM_MODEL:-}"
+if [[ -z "${LLM_ARGS:-}" && -n "${LLM_ARGS_AUTO:-}" ]]; then
+    LLM_ARGS="$LLM_ARGS_AUTO"
+fi
+LLM_ARGS="${LLM_ARGS:-}"
+export LLM_BIN LLM_MODEL LLM_ARGS
+LLM_SH="$AGENT_SYSTEM/scripts/llm.sh"
+if [ ! -x "$LLM_SH" ]; then
+    echo -e "${RED}LLM shim not found at $LLM_SH. Please update AGENT_SYSTEM or run setup.${NC}"
+    exit 1
+fi
 COMMAND="${1:-check}"
 
 GREEN='\033[0;32m'
@@ -65,7 +77,7 @@ case $COMMAND in
                 echo "Triggering proposal creation..."
                 tmux send-keys -t agent_system_spec:planner C-c Enter 2>/dev/null
                 sleep 2
-                tmux send-keys -t agent_system_spec:planner "claude" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:planner "$LLM_SH" Space "repl" Enter 2>/dev/null
                 sleep 3
                 tmux send-keys -t agent_system_spec:planner "Read /Users/mchaouachi/agent-system/prompts/planner_agent_spec.txt and $PROJECT_PATH/specs/999-fix-remaining-tests/spec.md. Create proposals in $PROJECT_PATH/coordination/task_proposals.json" Enter 2>/dev/null
                 
@@ -73,7 +85,7 @@ case $COMMAND in
                 echo "Triggering review..."
                 tmux send-keys -t agent_system_spec:reviewer C-c Enter 2>/dev/null
                 sleep 2
-                tmux send-keys -t agent_system_spec:reviewer "claude" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:reviewer "$LLM_SH" Space "repl" Enter 2>/dev/null
                 sleep 3
                 tmux send-keys -t agent_system_spec:reviewer "Read $PROJECT_PATH/coordination/task_proposals.json and approve the best approach with status: approved" Enter 2>/dev/null
                 
@@ -81,7 +93,7 @@ case $COMMAND in
                 echo "Triggering implementation..."
                 tmux send-keys -t agent_system_spec:planner C-c Enter 2>/dev/null
                 sleep 2
-                tmux send-keys -t agent_system_spec:planner "claude" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:planner "$LLM_SH" Space "repl" Enter 2>/dev/null
                 sleep 3
                 tmux send-keys -t agent_system_spec:planner "Read $PROJECT_PATH/coordination/task_proposals.json. Implement the approved approach to fix 75 tests in $PROJECT_PATH. Work autonomously." Enter 2>/dev/null
             fi

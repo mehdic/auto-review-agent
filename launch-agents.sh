@@ -68,10 +68,22 @@ if ! command -v tmux &> /dev/null; then
     exit 1
 fi
 
-# Check if Claude Code is installed
-if ! command -v claude &> /dev/null; then
-    echo -e "${RED}❌ Claude Code is not installed. Please install it first:${NC}"
-    echo "  npm install -g claude"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_MODEL="${LLM_MODEL:-}"
+if [[ -z "${LLM_ARGS:-}" && -n "${LLM_ARGS_CAUTIOUS:-}" ]]; then
+    LLM_ARGS="$LLM_ARGS_CAUTIOUS"
+fi
+LLM_ARGS="${LLM_ARGS:-}"
+export LLM_BIN LLM_MODEL LLM_ARGS
+LLM_SH="$SCRIPT_DIR/scripts/llm.sh"
+
+# Check if the configured LLM CLI is installed
+if ! command -v "$LLM_BIN" &> /dev/null; then
+    echo -e "${RED}❌ $LLM_BIN CLI is not installed. Please install it or set LLM_BIN accordingly.${NC}"
+    exit 1
+fi
+if [ ! -x "$LLM_SH" ]; then
+    echo -e "${RED}❌ LLM shim not found at $LLM_SH.${NC}"
     exit 1
 fi
 
@@ -114,13 +126,13 @@ tmux send-keys -t $SESSION_NAME:planner "echo '═══════════
 tmux send-keys -t $SESSION_NAME:planner "echo 'Project: $PROJECT_PATH'" C-m
 tmux send-keys -t $SESSION_NAME:planner "echo 'Prompt: $PLANNER_PROMPT'" C-m
 tmux send-keys -t $SESSION_NAME:planner "echo ''" C-m
-tmux send-keys -t $SESSION_NAME:planner "echo 'Starting Claude Code with planner role...'" C-m
+tmux send-keys -t $SESSION_NAME:planner "echo 'Starting $LLM_BIN with planner role...'" C-m
 tmux send-keys -t $SESSION_NAME:planner "echo ''" C-m
 
 # Send the prompt file content to planner
-tmux send-keys -t $SESSION_NAME:planner "claude --project ." C-m
+tmux send-keys -t $SESSION_NAME:planner "$LLM_SH repl --project ." C-m
 sleep 2
-tmux send-keys -t $SESSION_NAME:planner "$(cat $PLANNER_PROMPT | head -100)" C-m
+tmux send-keys -t $SESSION_NAME:planner "$(head -100 "$PLANNER_PROMPT")" C-m
 sleep 1
 tmux send-keys -t $SESSION_NAME:planner "" C-m
 tmux send-keys -t $SESSION_NAME:planner "Task: $TASK" C-m
@@ -133,13 +145,13 @@ tmux send-keys -t $SESSION_NAME:reviewer "echo '══════════�
 tmux send-keys -t $SESSION_NAME:reviewer "echo 'Project: $PROJECT_PATH'" C-m
 tmux send-keys -t $SESSION_NAME:reviewer "echo 'Prompt: $REVIEWER_PROMPT'" C-m
 tmux send-keys -t $SESSION_NAME:reviewer "echo ''" C-m
-tmux send-keys -t $SESSION_NAME:reviewer "echo 'Starting Claude Code with reviewer role...'" C-m
+tmux send-keys -t $SESSION_NAME:reviewer "echo 'Starting $LLM_BIN with reviewer role...'" C-m
 tmux send-keys -t $SESSION_NAME:reviewer "echo ''" C-m
 
 # Send the prompt file content to reviewer
-tmux send-keys -t $SESSION_NAME:reviewer "claude --project ." C-m
+tmux send-keys -t $SESSION_NAME:reviewer "$LLM_SH repl --project ." C-m
 sleep 2
-tmux send-keys -t $SESSION_NAME:reviewer "$(cat $REVIEWER_PROMPT | head -100)" C-m
+tmux send-keys -t $SESSION_NAME:reviewer "$(head -100 "$REVIEWER_PROMPT")" C-m
 
 # Set up monitoring dashboard
 tmux send-keys -t $SESSION_NAME:monitor "clear" C-m

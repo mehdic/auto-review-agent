@@ -4,6 +4,24 @@
 
 PROJECT_PATH="${1:-/Users/mchaouachi/IdeaProjects/StockMonitor}"
 AGENT_SYSTEM="${2:-/Users/mchaouachi/agent-system}"
+LLM_BIN="${LLM_BIN:-codex}"
+LLM_MODEL="${LLM_MODEL:-}"
+if [[ -z "${LLM_ARGS:-}" && -n "${LLM_ARGS_AUTO:-}" ]]; then
+    LLM_ARGS="$LLM_ARGS_AUTO"
+fi
+LLM_ARGS="${LLM_ARGS:-}"
+export LLM_BIN LLM_MODEL LLM_ARGS
+LLM_SH="$AGENT_SYSTEM/scripts/llm.sh"
+if ! command -v "$LLM_BIN" &> /dev/null; then
+    echo -e "${RED}Missing LLM CLI: $LLM_BIN${NC}"
+    exit 1
+fi
+if [ ! -x "$LLM_SH" ]; then
+    echo -e "${RED}Missing LLM shim at $LLM_SH${NC}"
+    exit 1
+fi
+LLM_SH_ESCAPED=$(printf '%q' "$LLM_SH")
+LLM_REPL_CMD="$LLM_SH_ESCAPED repl"
 PROPOSALS_FILE="$PROJECT_PATH/coordination/task_proposals.json"
 REGISTRY_FILE="$PROJECT_PATH/coordination/active_work_registry.json"
 LOG_DIR="$PROJECT_PATH/coordination/logs"
@@ -175,7 +193,7 @@ apply_fix() {
     case $fix_type in
         create_proposals)
             log_action "FIX: Triggering proposal creation"
-            send_to_window planner "claude"
+            send_to_window planner "$LLM_REPL_CMD"
             sleep 3
             send_to_window planner "Read $AGENT_SYSTEM/prompts/planner_agent_spec.txt and $PROJECT_PATH/specs/999-fix-remaining-tests/spec.md. Create proposals in $PROPOSALS_FILE with status: awaiting_review"
             sleep 10
@@ -183,7 +201,7 @@ apply_fix() {
             
         trigger_reviewer)
             log_action "FIX: Triggering reviewer to check proposals"
-            send_to_window reviewer "claude"
+            send_to_window reviewer "$LLM_REPL_CMD"
             sleep 3
             send_to_window reviewer "Read $PROPOSALS_FILE and evaluate the proposals. Choose the best approach and update the file with status: approved and chosen_approach"
             sleep 10
@@ -203,7 +221,7 @@ apply_fix() {
             
         trigger_planner_implementation)
             log_action "FIX: Triggering planner to start implementation"
-            send_to_window planner "claude"
+            send_to_window planner "$LLM_REPL_CMD"
             sleep 3
             send_to_window planner "Read $PROPOSALS_FILE. The proposal is approved with chosen_approach. Implement the solution to fix 75 tests in $PROJECT_PATH. Work autonomously."
             sleep 5
@@ -211,7 +229,7 @@ apply_fix() {
             
         start_implementation)
             log_action "FIX: Starting fresh implementation"
-            send_to_window planner "cd $PROJECT_PATH && claude"
+            send_to_window planner "cd $PROJECT_PATH && $LLM_REPL_CMD"
             sleep 3
             send_to_window planner "You are the implementation agent. Read the approved proposal at $PROPOSALS_FILE and implement approach_1 to fix 75 failing tests. Currently 108/183 pass. Work autonomously without asking permission."
             sleep 5
@@ -219,7 +237,7 @@ apply_fix() {
             
         restart_implementation)
             log_action "FIX: Restarting stalled implementation"
-            send_to_window planner "claude"
+            send_to_window planner "$LLM_REPL_CMD"
             sleep 3
             send_to_window planner "Continue fixing the remaining tests in $PROJECT_PATH. Check current test status with mvn test and continue from where you left off. Work autonomously."
             sleep 5
@@ -229,7 +247,7 @@ apply_fix() {
             log_action "FIX: Clearing planner errors and restarting"
             send_to_window planner "clear"
             sleep 1
-            send_to_window planner "cd $PROJECT_PATH && claude"
+            send_to_window planner "cd $PROJECT_PATH && $LLM_REPL_CMD"
             sleep 3
             send_to_window planner "Check $PROPOSALS_FILE for current status and continue with appropriate action. If approved, implement. If not, create proposals."
             ;;
@@ -238,7 +256,7 @@ apply_fix() {
             log_action "FIX: Clearing reviewer errors and restarting"
             send_to_window reviewer "clear"
             sleep 1
-            send_to_window reviewer "cd $PROJECT_PATH && claude"
+            send_to_window reviewer "cd $PROJECT_PATH && $LLM_REPL_CMD"
             sleep 3
             send_to_window reviewer "Check $PROPOSALS_FILE. If status is awaiting_review, evaluate and approve. Otherwise wait for proposals."
             ;;
@@ -294,7 +312,7 @@ with open('$PROPOSALS_FILE', 'w') as f:
     json.dump(data, f, indent=2)
 "
         sleep 2
-        send_to_window planner "claude"
+        send_to_window planner "$LLM_REPL_CMD"
         sleep 3
         send_to_window planner "The proposal has been approved. Read $PROPOSALS_FILE and implement approach_1 to fix 75 tests."
         
@@ -304,7 +322,7 @@ with open('$PROPOSALS_FILE', 'w') as f:
         echo "Manual fix steps:"
         echo "1. tmux attach -t agent_system_spec"
         echo "2. Go to planner window (Ctrl+b 0)"
-        echo "3. Start claude manually and paste implementation instructions"
+        echo "3. Start the LLM manually (./scripts/llm.sh repl) and paste implementation instructions"
         
         read -p "Do you want to restart the entire system? (y/n): " -n 1 -r
         echo
