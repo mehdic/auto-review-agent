@@ -67,17 +67,42 @@ while true; do
         RESTART_COUNT=$((RESTART_COUNT + 1))
         log_message "🔄 Attempting restart #$RESTART_COUNT..."
 
-        # Send restart command to implementer window
-        tmux send-keys -t "$SESSION_NAME:implementer" "# Restarting after crash..."
-        tmux send-keys -t "$SESSION_NAME:implementer" Enter
-        sleep 2
+        # Check what crashed: Claude in window or background loop?
+        # Get pane PID and check if Claude is running
+        PANE_PID=$(tmux list-panes -t "$SESSION_NAME:implementer" -F "#{pane_pid}" 2>/dev/null | head -1)
+        CLAUDE_RUNNING=1
+        if [ -n "$PANE_PID" ]; then
+            pgrep -P "$PANE_PID" "claude" >/dev/null 2>&1 && CLAUDE_RUNNING=0
+        fi
 
-        # Restart implementer loop
+        # If Claude crashed, restart it in the window
+        if [ $CLAUDE_RUNNING -ne 0 ]; then
+            log_message "Claude process crashed, restarting in window..."
+            tmux send-keys -t "$SESSION_NAME:implementer" -X cancel  # Clear any pending input
+            tmux send-keys -t "$SESSION_NAME:implementer" "" Enter
+            sleep 1
+            tmux send-keys -t "$SESSION_NAME:implementer" "cd '$PROJECT_PATH' && claude"
+            tmux send-keys -t "$SESSION_NAME:implementer" Enter
+            sleep 3
+        fi
+
+        # Restart background implementer loop
         IMPLEMENTER_SCRIPT="$SCRIPT_DIR/implementer-loop.sh"
         if [ -f "$IMPLEMENTER_SCRIPT" ]; then
-            tmux send-keys -t "$SESSION_NAME:implementer" "$IMPLEMENTER_SCRIPT '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
-            tmux send-keys -t "$SESSION_NAME:implementer" Enter
-            log_message "✅ Restart command sent"
+            # Kill old instance if it exists
+            if [ -f "$PROJECT_PATH/coordination/implementer.pid" ]; then
+                OLD_PID=$(cat "$PROJECT_PATH/coordination/implementer.pid" 2>/dev/null)
+                if [ -n "$OLD_PID" ]; then
+                    kill "$OLD_PID" 2>/dev/null || true
+                fi
+            fi
+
+            # Start new background process
+            nohup "$IMPLEMENTER_SCRIPT" "$PROJECT_PATH" "$TASKS_FILE" "$SPEC_NAME" "$SESSION_NAME" \
+                > "$PROJECT_PATH/coordination/logs/implementer-loop.log" 2>&1 &
+            NEW_PID=$!
+            echo "$NEW_PID" > "$PROJECT_PATH/coordination/implementer.pid"
+            log_message "✅ Restart complete (background PID: $NEW_PID)"
             sleep 5
             continue
         else

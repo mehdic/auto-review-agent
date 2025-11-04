@@ -96,23 +96,31 @@ is_implementer_alive() {
         return 1
     fi
 
-    # Check if implementer-loop.sh (bash script) is running under this pane
-    # This is the persistent process that manages the Claude session
-    pgrep -P "$pane_pid" -f "implementer-loop.sh" >/dev/null 2>&1
-    local loop_running=$?
-
-    # Also check if Claude process is running (implementer-loop starts it)
+    # NEW ARCHITECTURE: Check if Claude is running in the pane (not implementer-loop.sh)
+    # Claude runs IN the window, implementer-loop.sh runs in background
     pgrep -P "$pane_pid" "claude" >/dev/null 2>&1
     local claude_running=$?
+
+    # Check if background implementer-loop.sh is running (from PID file)
+    local project_path=$(tmux display-message -t "$session_name:$window_name" -p "#{pane_current_path}" 2>/dev/null)
+    local pid_file="$project_path/coordination/implementer.pid"
+    local loop_running=1  # Default to not running
+
+    if [ -f "$pid_file" ]; then
+        local implementer_pid=$(cat "$pid_file" 2>/dev/null)
+        if [ -n "$implementer_pid" ] && kill -0 "$implementer_pid" 2>/dev/null; then
+            loop_running=0  # Running
+        fi
+    fi
 
     # Both should be running for healthy state
     if [ $loop_running -eq 0 ] && [ $claude_running -eq 0 ]; then
         return 0  # Both running, healthy
     elif [ $loop_running -eq 0 ] && [ $claude_running -ne 0 ]; then
-        # Loop running but Claude crashed - this is recoverable
-        return 0  # Loop will detect and handle
+        # Loop running but Claude crashed - loop will detect and handle
+        return 0
     else
-        # Loop crashed
+        # Background loop crashed
         return 1
     fi
 }
