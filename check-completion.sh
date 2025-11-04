@@ -55,6 +55,8 @@ Respond with EXACTLY ONE LINE:
 
 Do not provide explanations beyond that one line.
 Evaluate the actual current state, don't assume anything.
+
+IMPORTANT: After your response line, write exactly: BAZINGA
 ENDPROMPT
 
 # Replace placeholders
@@ -62,10 +64,13 @@ sed -i.bak "s|SPEC_FILE_PLACEHOLDER|$SPEC_FILE|g" "$PROMPT_FILE"
 sed -i.bak "s|PROJECT_PATH_PLACEHOLDER|$PROJECT_PATH|g" "$PROMPT_FILE"
 
 # Run Claude with prompt file
-RESULT=$(cat "$PROMPT_FILE" | claude 2>/dev/null | tail -1)
+FULL_OUTPUT=$(cat "$PROMPT_FILE" | claude 2>/dev/null)
 
 # Clean up
 rm -f "$PROMPT_FILE" "$PROMPT_FILE.bak"
+
+# Extract result (look for COMPLETE or INCOMPLETE line, ignoring BAZINGA)
+RESULT=$(echo "$FULL_OUTPUT" | grep -E "^(COMPLETE|INCOMPLETE)" | head -1)
 
 log "Result: $RESULT"
 
