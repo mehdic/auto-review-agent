@@ -79,8 +79,8 @@ EOF
     return $?
 }
 
-# Check if Claude process is running in tmux window
-is_claude_running() {
+# Check if implementer loop script is still running in tmux window
+is_implementer_alive() {
     local session_name="$1"
     local window_name="$2"
 
@@ -96,8 +96,9 @@ is_claude_running() {
         return 1
     fi
 
-    # Check if Claude process exists under this pane
-    pgrep -P "$pane_pid" "claude" >/dev/null 2>&1
+    # Check if implementer-loop.sh (bash script) is running under this pane
+    # This is the persistent process, not the temporary 'claude' process
+    pgrep -P "$pane_pid" -f "implementer-loop.sh" >/dev/null 2>&1
     return $?
 }
 
@@ -122,4 +123,20 @@ is_error_state() {
     local output="$1"
 
     echo "$output" | tail -20 | grep -qiE "(error:|exception|traceback|fatal|failed|unable to|cannot|could not|permission denied|command not found)"
+}
+
+# Detect if implementer is skipping or giving up on tasks
+is_giving_up() {
+    local output="$1"
+
+    # Patterns that indicate giving up
+    echo "$output" | tail -30 | grep -qiE "(skipping|skip this|moving on|can't fix|unable to fix|too complex|requires.*work|will need|leaving.*for later|TODO|FIXME|not possible|blocked by|requires feature)"
+}
+
+# Extract what the implementer is giving up on
+extract_blocked_task() {
+    local output="$1"
+
+    # Try to extract the test/task name that's being skipped
+    echo "$output" | tail -30 | grep -iE "(skipping|skip this|moving on|can't fix)" | head -1
 }

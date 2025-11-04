@@ -43,9 +43,9 @@ while true; do
     sleep $CHECK_INTERVAL
     CURRENT_TIME=$(date +%s)
 
-    # CRITICAL CHECK 1: Is Claude actually running?
-    if ! is_claude_running "$SESSION_NAME" "implementer"; then
-        log_message "❌ Claude process not running in implementer window!"
+    # CRITICAL CHECK 1: Is implementer-loop.sh still running?
+    if ! is_implementer_alive "$SESSION_NAME" "implementer"; then
+        log_message "❌ Implementer loop crashed or exited!"
 
         # Check if it's because work is complete
         STATUS=$(read_state "$STATE_FILE" "status" "unknown")
@@ -111,7 +111,104 @@ while true; do
         continue
     fi
 
-    # CRITICAL CHECK 3: Question detection with duplicate prevention
+    # CRITICAL CHECK 3: Giving up / Skipping detection
+    if is_giving_up "$IMPLEMENTER_OUTPUT"; then
+        log_message "⚠️  Implementer appears to be giving up on a task!"
+
+        # Extract what they're giving up on
+        BLOCKED_TASK=$(extract_blocked_task "$IMPLEMENTER_OUTPUT")
+        log_message "Blocked task: $BLOCKED_TASK"
+
+        # Check retry count for this pattern
+        RETRY_KEY=$(echo "$BLOCKED_TASK" | md5sum | cut -d' ' -f1)
+        RETRY_FILE="$COORDINATION_DIR/retries_$RETRY_KEY.txt"
+
+        if [ ! -f "$RETRY_FILE" ]; then
+            echo "0" > "$RETRY_FILE"
+        fi
+
+        RETRY_COUNT=$(cat "$RETRY_FILE")
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        echo "$RETRY_COUNT" > "$RETRY_FILE"
+
+        log_message "This is retry attempt #$RETRY_COUNT for this task"
+
+        if [ $RETRY_COUNT -le 3 ]; then
+            log_message "🔍 Generating reviewer feedback with solutions..."
+
+            # Generate analysis and solutions using Claude
+            REVIEW_PROMPT="You are a senior code reviewer analyzing why an implementer got stuck.
+
+Implementer's last output (what they're stuck on):
+\`\`\`
+$IMPLEMENTER_OUTPUT
+\`\`\`
+
+Your job:
+1. Identify the SPECIFIC technical problem (don't just restate what they said)
+2. Provide 3-5 CONCRETE solutions the implementer should try
+3. Be SPECIFIC with file paths, function names, exact commands
+4. Format as actionable steps they can execute immediately
+
+Respond in this format:
+PROBLEM: [one sentence diagnosis]
+
+SOLUTIONS TO TRY:
+1. [Specific action with exact details]
+2. [Another specific action]
+3. [etc]
+
+EXAMPLE APPROACHES:
+- [Reference similar patterns in the codebase if relevant]
+- [Suggest debugging commands to get more info]"
+
+            REVIEWER_FEEDBACK=$(echo "$REVIEW_PROMPT" | claude --max-tokens 1000 2>/dev/null | tail -n +2)
+
+            log_message "📝 Reviewer feedback generated"
+            echo "$REVIEWER_FEEDBACK" | tee -a "$LOG_FILE"
+
+            # Send feedback to implementer
+            tmux send-keys -t "$SESSION_NAME:implementer" ""
+            tmux send-keys -t "$SESSION_NAME:implementer" Enter
+            sleep 2
+
+            tmux send-keys -t "$SESSION_NAME:implementer" "REVIEWER FEEDBACK (Attempt $RETRY_COUNT/3): The reviewer has analyzed your situation. Here are specific solutions to try:
+
+$REVIEWER_FEEDBACK
+
+DO NOT SKIP THIS TASK. Try each solution systematically. Report results after each attempt."
+            tmux send-keys -t "$SESSION_NAME:implementer" Enter
+
+            sleep 10
+        elif [ $RETRY_COUNT -eq 4 ]; then
+            log_message "🧠 ENABLING ULTRATHINK MODE (3 retries exhausted)"
+
+            # Enable extended thinking for deep analysis
+            tmux send-keys -t "$SESSION_NAME:implementer" ""
+            tmux send-keys -t "$SESSION_NAME:implementer" Enter
+            sleep 2
+
+            tmux send-keys -t "$SESSION_NAME:implementer" "ULTRATHINK MODE ENABLED: You have exhausted 3 retry attempts. Use extended thinking to deeply analyze this problem. Think step-by-step about:
+1. Root cause analysis - what is the REAL underlying issue?
+2. Have you checked ALL relevant files, configs, dependencies?
+3. Are there hidden assumptions you're making?
+4. What debugging output do you need to see?
+5. Break the problem into the smallest possible pieces
+
+Use <Thinking> tags to show your deep analysis. Then implement the solution. This is attempt 4 - we MUST solve this."
+            tmux send-keys -t "$SESSION_NAME:implementer" Enter
+
+            sleep 15
+        else
+            log_message "💀 Max retries (4) exceeded for this task"
+            log_message "Escalating to user intervention required"
+            update_state "$STATE_FILE" "blocked" "Task requires manual intervention after 4 attempts: $BLOCKED_TASK"
+        fi
+
+        continue
+    fi
+
+    # CRITICAL CHECK 4: Question detection with duplicate prevention
     if is_asking_question "$IMPLEMENTER_OUTPUT"; then
         TIME_SINCE_LAST_RESPONSE=$((CURRENT_TIME - LAST_QUESTION_RESPONSE))
 

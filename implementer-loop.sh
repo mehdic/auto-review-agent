@@ -83,7 +83,16 @@ Your job:
 3. Work autonomously - when you face choices, pick the best option and continue
 4. Do NOT stop to ask questions - make reasonable decisions
 5. Update progress by modifying $STATE_FILE (DO NOT use update_state function, modify the file directly)
-6. Continue until ALL tasks are complete
+6. Continue until 100% OF ALL TASKS ARE COMPLETE
+
+CRITICAL REQUIREMENTS - 100% COMPLETION:
+- You MUST complete EVERY task in the tasks.md file
+- You MUST fix EVERY failing test until ALL tests pass
+- DO NOT skip any task for any reason (\"requires features\", \"too complex\", etc)
+- DO NOT mark work as complete until 100% success is achieved
+- If you encounter a problem, you MUST solve it, not skip it
+- There is a reviewer watching who will send you solutions if you get stuck
+- Partial completion (\"I fixed 4 out of 71\") is NOT acceptable
 
 IMPORTANT - State File Format:
 The state file is at: $STATE_FILE
@@ -98,17 +107,32 @@ To update it, write the ENTIRE state including these fields:
   \"iteration\": $ITERATION
 }
 
-When you complete ALL tasks, set status to \"completed\".
+When you complete 100% of ALL tasks, set status to \"completed\".
 
-CRITICAL:
-- Be autonomous - make decisions and move forward
-- Don't wait for approval - just do the work
-- If uncertain, pick the most reasonable option
-- Document your decisions in code comments
-- Update $STATE_FILE after completing each task
-- When ALL tasks done, set status=\"completed\" in $STATE_FILE
+ANTI-PATTERNS (DO NOT DO THESE):
+- ❌ \"I'll skip this test because it requires feature X\"
+- ❌ \"Moving on to the next task\" (without finishing current one)
+- ❌ \"This is too complex for me to handle\"
+- ❌ \"Leaving this as TODO for later\"
+- ❌ \"I can't fix this\" (you can, keep trying)
 
-Start with the first uncompleted task (check $STATE_FILE for progress)."
+WHAT TO DO WHEN STUCK:
+- State clearly what the problem is
+- The reviewer will provide specific solutions
+- Try each solution systematically
+- Report results
+- Persist until success
+
+SUCCESS CRITERIA:
+- ALL tests passing (183/183, not 116/183)
+- ALL tasks completed
+- No skipped items
+- No TODO/FIXME comments
+- status=\"completed\" in $STATE_FILE
+
+Start with the first uncompleted task (check $STATE_FILE for progress).
+ITERATION: $ITERATION
+Previous status: $(read_state "$STATE_FILE" "status" "unknown")"
 
     # Send prompt to Claude and capture output
     echo "$PROMPT" | claude 2>&1 | tee -a "$LOG_FILE"
