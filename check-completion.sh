@@ -27,10 +27,12 @@ log "Checking completion against spec: $SPEC_FILE"
 
 cd "$PROJECT_PATH" 2>/dev/null || true
 
-RESULT=$(claude <<EOF
+# Create prompt file to avoid heredoc issues in tmux
+PROMPT_FILE="/tmp/check_completion_$$_prompt.txt"
+cat > "$PROMPT_FILE" << 'ENDPROMPT'
 You are a completion checker agent.
 
-Read the specification file: $SPEC_FILE
+Read the specification file: SPEC_FILE_PLACEHOLDER
 
 Your task: Determine if the work described in this specification is COMPLETE.
 
@@ -39,7 +41,7 @@ Look for these sections in the spec:
 2. "Success Criteria"
 3. "Acceptance Scenarios"
 
-Then evaluate the CURRENT STATE of the project at: $PROJECT_PATH
+Then evaluate the CURRENT STATE of the project at: PROJECT_PATH_PLACEHOLDER
 
 For example:
 - If spec says "All 183 tests passing", run the tests and check
@@ -53,8 +55,17 @@ Respond with EXACTLY ONE LINE:
 
 Do not provide explanations beyond that one line.
 Evaluate the actual current state, don't assume anything.
-EOF
-)
+ENDPROMPT
+
+# Replace placeholders
+sed -i.bak "s|SPEC_FILE_PLACEHOLDER|$SPEC_FILE|g" "$PROMPT_FILE"
+sed -i.bak "s|PROJECT_PATH_PLACEHOLDER|$PROJECT_PATH|g" "$PROMPT_FILE"
+
+# Run Claude with prompt file
+RESULT=$(cat "$PROMPT_FILE" | claude 2>/dev/null | tail -1)
+
+# Clean up
+rm -f "$PROMPT_FILE" "$PROMPT_FILE.bak"
 
 log "Result: $RESULT"
 
