@@ -97,7 +97,9 @@ CRITICAL:
 Start with Phase 1 now."
 
 # Send the prompt to Claude
-tmux send-keys -t "$SESSION_NAME" "$PROMPT" Enter
+tmux send-keys -t "$SESSION_NAME" "$PROMPT"
+# Now send Enter to execute it
+tmux send-keys -t "$SESSION_NAME" Enter
 
 log_message "Instructions sent to Claude"
 echo ""
