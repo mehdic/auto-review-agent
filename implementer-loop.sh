@@ -127,7 +127,7 @@ Start working now."
         sleep 2
         CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -20)
 
-        if is_claude_waiting_for_input "$CURRENT_OUTPUT"; then
+        if is_waiting_for_input "$CURRENT_OUTPUT"; then
             log_message "Claude is ready for input"
             break
         fi
