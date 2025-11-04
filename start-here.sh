@@ -21,7 +21,7 @@ clear
 show_header() {
     echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║           ${BOLD}AGENT SYSTEM COMMAND CENTER${NC}${CYAN}                         ║${NC}"
-    echo -e "${CYAN}║                  Start Here Menu                               ║${NC}"
+    echo -e "${CYAN}║              Generic Autonomous Agents v2.0                    ║${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -37,7 +37,7 @@ show_menu() {
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${GREEN}LAUNCH AGENTS${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${BOLD}4)${NC}  Launch From Spec      - Start agents with specific spec file"
+    echo -e "  ${BOLD}4)${NC}  Launch From Spec      - Start agents with specific spec file (RECOMMENDED)"
     echo -e "  ${BOLD}5)${NC}  Launch Standard       - Start agents without spec"
     echo -e "  ${BOLD}6)${NC}  Launch Strict Mode    - Start agents with strict validation"
     echo ""
@@ -45,31 +45,32 @@ show_menu() {
     echo -e "${GREEN}MONITORING & DEBUGGING${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${BOLD}7)${NC}  Check Progress        - Full progress report with recommendations"
-    echo -e "  ${BOLD}8)${NC}  Monitor System        - Live monitoring dashboard"
-    echo -e "  ${BOLD}9)${NC}  Agent Manager         - Quick status/fix/restart tool"
-    echo -e "  ${BOLD}10)${NC} View Logs            - Interactive log viewer"
-    echo -e "  ${BOLD}11)${NC} Setup Logging        - Enable comprehensive chat logging"
+    echo -e "  ${BOLD}8)${NC}  Diagnose Stuck        - ${MAGENTA}[NEW]${NC} Analyze why agents are stuck"
+    echo -e "  ${BOLD}9)${NC}  Monitor System        - Live monitoring dashboard"
+    echo -e "  ${BOLD}10)${NC} Agent Manager         - Quick status/fix/restart tool"
+    echo -e "  ${BOLD}11)${NC} View Logs            - Interactive log viewer"
+    echo -e "  ${BOLD}12)${NC} Setup Logging        - Enable comprehensive chat logging"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${GREEN}FIXING & RECOVERY${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${BOLD}12)${NC} Auto Fix             - Intelligent issue diagnosis and fixing"
-    echo -e "  ${BOLD}13)${NC} Force Implementation - Force planner to start implementing"
-    echo -e "  ${BOLD}14)${NC} Start Implementation - Simple implementation starter"
-    echo -e "  ${BOLD}15)${NC} Force Proposals      - Force creation of proposals"
-    echo -e "  ${BOLD}16)${NC} Fix Launch Script    - Fix command too long errors"
-    echo -e "  ${BOLD}17)${NC} Apply File Fix       - Fix file-based approach issues"
-    echo -e "  ${BOLD}18)${NC} Stop Agents          - Kill all agent sessions"
+    echo -e "  ${BOLD}13)${NC} Wake Up Planner      - ${MAGENTA}[NEW]${NC} Wake stuck planner in existing tmux"
+    echo -e "  ${BOLD}14)${NC} Nuclear Fix          - ${MAGENTA}[NEW]${NC} Force implementation (all states)"
+    echo -e "  ${BOLD}15)${NC} Auto Fix             - Intelligent issue diagnosis and fixing"
+    echo -e "  ${BOLD}16)${NC} Stop Agents          - Kill all agent sessions"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${GREEN}UTILITIES${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${BOLD}19)${NC} View Documentation   - Show available documentation"
-    echo -e "  ${BOLD}20)${NC} Show File Paths      - Display current configuration"
-    echo -e "  ${BOLD}21)${NC} Run Custom Command   - Execute any script with parameters"
+    echo -e "  ${BOLD}17)${NC} View Documentation   - Show available documentation"
+    echo -e "  ${BOLD}18)${NC} Show File Paths      - Display current configuration"
+    echo -e "  ${BOLD}19)${NC} Run Custom Command   - Execute any script with parameters"
     echo ""
     echo -e "  ${BOLD}0)${NC}  Exit"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}💡 New in v2.0: Generic loops work with ANY spec.md${NC}"
+    echo -e "${CYAN}   Agents continue until completion verified!${NC}"
 }
 
 get_project_path() {
@@ -93,7 +94,7 @@ execute_script() {
     local script=$1
     shift
     local params="$@"
-    
+
     if [ -f "$script" ]; then
         echo -e "${GREEN}Executing: $script $params${NC}"
         echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -112,6 +113,8 @@ show_documentation() {
     echo -e "${CYAN}Available Documentation:${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     local docs=(
+        "GENERIC_LOOPS_GUIDE.md:Generic agent loops guide (v2.0) [NEW]"
+        "FIX_STUCK_PLANNER.md:Troubleshooting stuck planners [NEW]"
         "COMPLETE_DOCUMENTATION.md:Complete system documentation"
         "AGENT_SYSTEM_GUIDE VERY IMPORTANT MAIN DOC.md:Main agent system guide"
         "QUICK_REFERENCE.md:Quick command reference"
@@ -120,12 +123,12 @@ show_documentation() {
         "SPEC_BASED_WORKFLOW.md:Spec-based workflow guide"
         "STRICT_MODE_GUIDE.md:Strict mode documentation"
     )
-    
+
     for doc in "${docs[@]}"; do
         IFS=':' read -r filename description <<< "$doc"
         if [ -f "$filename" ]; then
-            echo -e "  ${GREEN}✓${NC} $filename"
-            echo "    └─ $description"
+            echo -e "  ${GREEN}✓${NC} ${BOLD}$filename${NC}"
+            echo -e "    └─ $description"
         fi
     done
     echo ""
@@ -151,6 +154,12 @@ show_paths() {
     if [ -f "$DEFAULT_PROJECT/coordination/task_proposals.json" ]; then
         status=$(python3 -c "import json; print(json.load(open('$DEFAULT_PROJECT/coordination/task_proposals.json')).get('status', 'unknown'))" 2>/dev/null || echo "error")
         echo -e "  Task Status: ${GREEN}$status${NC}"
+
+        # Show iteration if available
+        iteration=$(python3 -c "import json; data=json.load(open('$DEFAULT_PROJECT/coordination/task_proposals.json')); print(data.get('iteration', 'N/A'))" 2>/dev/null || echo "N/A")
+        if [ "$iteration" != "N/A" ]; then
+            echo -e "  Iteration: ${GREEN}$iteration${NC}"
+        fi
     else
         echo "  Task Status: No proposals file"
     fi
@@ -179,50 +188,55 @@ while true; do
     clear
     show_header
     show_menu
-    
+
     echo ""
-    read -p "Select option [0-21]: " choice
+    read -p "Select option [0-19]: " choice
     echo ""
-    
+
     case $choice in
         1)  # Setup Project
             project=$(get_project_path)
             execute_script "./setup.sh" "$project"
             ;;
-            
+
         2)  # Quick Start
             execute_script "./QUICKSTART.sh"
             ;;
-            
+
         3)  # Create Test Spec
             execute_script "./CREATE_TEST_SPEC.sh"
             ;;
-            
+
         4)  # Launch From Spec
             project=$(get_project_path)
             spec=$(get_spec_number "$project")
             execute_script "./launch-agents-from-spec.sh" "$project" "$spec"
             ;;
-            
+
         5)  # Launch Standard
             project=$(get_project_path)
             execute_script "./launch-agents.sh" "$project"
             ;;
-            
+
         6)  # Launch Strict Mode
             project=$(get_project_path)
             execute_script "./launch-agents-strict.sh" "$project"
             ;;
-            
+
         7)  # Check Progress
             execute_script "./check-agent-progress.sh" "$DEFAULT_PROJECT"
             ;;
-            
-        8)  # Monitor System
+
+        8)  # Diagnose Stuck (NEW)
+            project=$(get_project_path)
+            execute_script "./diagnose-stuck.sh" "$project"
+            ;;
+
+        9)  # Monitor System
             execute_script "./monitor.sh" "$DEFAULT_PROJECT"
             ;;
-            
-        9)  # Agent Manager
+
+        10) # Agent Manager
             echo -e "${CYAN}Agent Manager Commands:${NC}"
             echo "  check - Check status"
             echo "  fix   - Auto-fix issues"
@@ -232,63 +246,53 @@ while true; do
             cmd="${cmd:-check}"
             execute_script "./agent-manager.sh" "$cmd"
             ;;
-            
-        10) # View Logs
+
+        11) # View Logs
             execute_script "./view-logs.sh" "$DEFAULT_PROJECT"
             ;;
-            
-        11) # Setup Logging
+
+        12) # Setup Logging
             project=$(get_project_path)
             execute_script "./setup-logging.sh" "$project"
             ;;
-            
-        12) # Auto Fix
+
+        13) # Wake Up Planner (NEW)
+            project=$(get_project_path)
+            execute_script "./wake-up-planner.sh" "$project"
+            ;;
+
+        14) # Nuclear Fix (NEW)
+            project=$(get_project_path)
+            execute_script "./nuclear-fix.sh" "$project"
+            ;;
+
+        15) # Auto Fix
             project=$(get_project_path)
             execute_script "./agent-autofix.sh" "$project"
             ;;
-            
-        13) # Force Implementation
-            execute_script "./force-implementation.sh"
-            ;;
-            
-        14) # Start Implementation
-            execute_script "./start-implementation.sh"
-            ;;
-            
-        15) # Force Proposals
-            execute_script "./force-proposals.sh"
-            ;;
-            
-        16) # Fix Launch Script
-            execute_script "./fix-launch-script.sh"
-            ;;
-            
-        17) # Apply File Fix
-            execute_script "./apply-file-fix.sh"
-            ;;
-            
-        18) # Stop Agents
+
+        16) # Stop Agents
             execute_script "./stop-agents.sh"
             ;;
-            
-        19) # View Documentation
+
+        17) # View Documentation
             show_documentation
             ;;
-            
-        20) # Show File Paths
+
+        18) # Show File Paths
             show_paths
             read -p "Press Enter to continue..."
             ;;
-            
-        21) # Run Custom Command
+
+        19) # Run Custom Command
             run_custom
             ;;
-            
+
         0)  # Exit
             echo -e "${GREEN}Goodbye!${NC}"
             exit 0
             ;;
-            
+
         *)
             echo -e "${RED}Invalid option. Please try again.${NC}"
             read -p "Press Enter to continue..."
