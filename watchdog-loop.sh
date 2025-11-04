@@ -30,7 +30,7 @@ log_message "══════════════════════�
 # Monitoring loop
 CHECK_INTERVAL=30  # Check every 30 seconds
 IDLE_THRESHOLD=300  # 5 minutes without file changes
-LAST_FILE_CHANGE=0
+LAST_FILE_CHANGE=$(date +%s)  # Initialize to current time
 
 while true; do
     sleep $CHECK_INTERVAL

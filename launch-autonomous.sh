@@ -75,8 +75,8 @@ SESSION_NAME="agent_${SPEC_NUMBER}_$(date +%s)"
 
 echo -e "${CYAN}Creating tmux session: ${YELLOW}$SESSION_NAME${NC}"
 
-# Kill existing session with same base name if exists
-tmux kill-session -t "agent_${SPEC_NUMBER}*" 2>/dev/null
+# Kill existing sessions with same spec number if exists
+tmux list-sessions 2>/dev/null | grep "^agent_${SPEC_NUMBER}_" | cut -d: -f1 | xargs -I {} tmux kill-session -t {} 2>/dev/null || true
 
 # Create tmux session with windows
 tmux new-session -d -s "$SESSION_NAME" -n "implementer" -c "$PROJECT_PATH"
@@ -97,7 +97,7 @@ sleep 2
 # Window 2: Monitor
 echo -e "${CYAN}Starting monitor...${NC}"
 tmux new-window -t "$SESSION_NAME" -n "monitor" -c "$PROJECT_PATH"
-tmux send-keys -t "$SESSION_NAME:monitor" "watch -n 5 'cat coordination/state.json 2>/dev/null | jq .'"
+tmux send-keys -t "$SESSION_NAME:monitor" "watch -n 5 'cat \"$PROJECT_PATH/coordination/state.json\" 2>/dev/null | jq . || echo \"Waiting for state file...\"'"
 tmux send-keys -t "$SESSION_NAME:monitor" Enter
 
 # Select implementer window
