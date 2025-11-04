@@ -13,16 +13,42 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Cache file for remembering last used values
+CACHE_FILE="$HOME/.auto-impl-cache"
+
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  Autonomous Implementer System${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# Get project path
-echo -e "${GREEN}Enter project path (press Enter for current directory):${NC}"
-read -r PROJECT_PATH
+# Check if we have cached values
+if [ -f "$CACHE_FILE" ]; then
+    source "$CACHE_FILE"
+
+    if [ -n "$LAST_PROJECT_PATH" ] && [ -n "$LAST_SPEC_NUMBER" ]; then
+        echo -e "${YELLOW}Last used:${NC}"
+        echo -e "  Project: ${BLUE}$LAST_PROJECT_PATH${NC}"
+        echo -e "  Spec:    ${BLUE}$LAST_SPEC_NUMBER${NC}"
+        echo ""
+        echo -e "${GREEN}Use these values? (y/n):${NC}"
+        read -r USE_CACHED
+
+        if [ "$USE_CACHED" = "y" ] || [ "$USE_CACHED" = "Y" ]; then
+            PROJECT_PATH="$LAST_PROJECT_PATH"
+            SPEC_NUMBER="$LAST_SPEC_NUMBER"
+            echo -e "${BLUE}Using cached values${NC}"
+            echo ""
+        fi
+    fi
+fi
+
+# Get project path (if not using cached)
 if [ -z "$PROJECT_PATH" ]; then
-    PROJECT_PATH="$(pwd)"
+    echo -e "${GREEN}Enter project path (press Enter for current directory):${NC}"
+    read -r PROJECT_PATH
+    if [ -z "$PROJECT_PATH" ]; then
+        PROJECT_PATH="$(pwd)"
+    fi
 fi
 
 # Validate project path
@@ -34,13 +60,15 @@ fi
 echo -e "${BLUE}Using project path: $PROJECT_PATH${NC}"
 echo ""
 
-# Get spec number
-echo -e "${GREEN}Enter spec number (e.g., 001, 002, 999):${NC}"
-read -r SPEC_NUMBER
-
+# Get spec number (if not using cached)
 if [ -z "$SPEC_NUMBER" ]; then
-    echo -e "${RED}Error: Spec number is required${NC}"
-    exit 1
+    echo -e "${GREEN}Enter spec number (e.g., 001, 002, 999):${NC}"
+    read -r SPEC_NUMBER
+
+    if [ -z "$SPEC_NUMBER" ]; then
+        echo -e "${RED}Error: Spec number is required${NC}"
+        exit 1
+    fi
 fi
 
 # Find the spec
@@ -57,6 +85,13 @@ eval "$SPEC_INFO"
 echo -e "${BLUE}Found spec: $SPEC_NAME${NC}"
 echo -e "${BLUE}Tasks file: $TASKS_FILE${NC}"
 echo ""
+
+# Save to cache for next time
+cat > "$CACHE_FILE" <<EOF
+# Auto-generated cache file - do not edit manually
+LAST_PROJECT_PATH="$PROJECT_PATH"
+LAST_SPEC_NUMBER="$SPEC_NUMBER"
+EOF
 
 # Show menu
 echo -e "${GREEN}Select an operation:${NC}"
