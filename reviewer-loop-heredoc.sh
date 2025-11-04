@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generic Reviewer Loop - Works with ANY spec.md file (TMUX-COMPATIBLE)
+# Generic Reviewer Loop - Works with ANY spec.md file
 # Monitors proposals, approves them, and tracks implementation progress
 
 PROJECT_PATH="$1"
@@ -20,7 +20,6 @@ NC='\033[0m'
 
 # Ensure log directory exists
 mkdir -p "$(dirname "$NOTIFICATION_LOG")"
-mkdir -p "$PROJECT_PATH/coordination/prompts"
 
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] REVIEWER: $1" | tee -a "$NOTIFICATION_LOG"
@@ -60,9 +59,7 @@ except:
 
                 cd "$PROJECT_PATH"
 
-                # Create review prompt file (tmux-compatible)
-                REVIEW_PROMPT_FILE="$PROJECT_PATH/coordination/prompts/review_prompt_$$.txt"
-                cat > "$REVIEW_PROMPT_FILE" <<EOF
+                claude <<EOF
 Read the reviewer instructions: $REVIEWER_PROMPT
 Read the task proposals: $PROPOSALS_FILE
 Read the specification: $SPEC_FILE
@@ -83,12 +80,6 @@ Update $PROPOSALS_FILE with:
 
 Make your decision and update the file now.
 EOF
-
-                # Call claude with review prompt
-                cat "$REVIEW_PROMPT_FILE" | claude 2>&1 | tee -a "$NOTIFICATION_LOG"
-
-                # Clean up
-                rm -f "$REVIEW_PROMPT_FILE"
 
                 log_message "Review completed and file updated"
                 sleep 30
