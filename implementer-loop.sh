@@ -37,25 +37,19 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] IMPLEMENTER: $1" | tee -a "$LOG_FILE"
 }
 
-# Detect if Claude is waiting for input
-# Strategy: Instead of trying to detect absence of working messages,
-# detect PRESENCE of the input prompt (positive signal)
-is_claude_waiting_for_input() {
+# Detect if Claude finished responding
+# USER'S BRILLIANT SOLUTION: We tell Claude to end with "BAZINGA"
+# Then we just look for that marker!
+is_claude_finished() {
     local output="$1"
 
-    # PRIMARY SIGNAL: Look for the "Message:" prompt that Claude shows
-    # This is what appears when Claude is ready for input
-    if echo "$output" | tail -10 | grep -qE "^Message:"; then
-        return 0  # Definitely waiting for input
+    # Look for BAZINGA in the last 30 lines
+    # (User tested this and it works!)
+    if echo "$output" | tail -30 | grep -q "BAZINGA"; then
+        return 0  # Claude finished this turn
     fi
 
-    # SECONDARY: Look for input cursor indicators
-    if echo "$output" | tail -5 | grep -qE "(^>|Type a message|Enter your|^│.*│$)"; then
-        return 0  # Waiting for input
-    fi
-
-    # If we DON'T see the prompt, Claude is probably still working
-    return 1  # Not waiting, still working
+    return 1  # Still working
 }
 
 log_message "═══════════════════════════════════════════════════════════"
@@ -123,6 +117,8 @@ Previous status: $(read_state "$STATE_FILE" "status" "unknown")
 
 When you complete 100% of tasks, update $STATE_FILE with status=\"completed\".
 
+IMPORTANT: When you finish your response, make sure the very last word you write is exactly: BAZINGA
+
 Start working now."
 
     # Wait for Claude to be ready for input
@@ -157,76 +153,38 @@ Start working now."
     tmux send-keys -t "$SESSION_NAME:implementer" Enter
 
     # Wait for Claude to finish processing
-    # PRIMARY: Detect output stability (no changes for 20 seconds)
-    # SECONDARY: Look for "Message:" prompt as confirmation
-    log_message "Waiting for Claude to finish working..."
+    # USER'S SOLUTION: Look for BAZINGA marker that Claude adds at end
+    log_message "Waiting for Claude to finish (looking for BAZINGA marker)..."
     WORK_START_TIME=$(date +%s)
-    LAST_ACTIVITY_TIME=$(date +%s)
-    LAST_OUTPUT_HASH=""
-    STABLE_COUNT=0  # How many checks in a row output has been stable
-    LAST_DETECTION=""
+    LAST_CHECK_TIME=$(date +%s)
+    CHECK_COUNT=0
 
     while true; do
         sleep 5
         CURRENT_TIME=$(date +%s)
+        CHECK_COUNT=$((CHECK_COUNT + 1))
 
         # Capture current output
         CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -50)
 
-        # Calculate hash of last 20 lines (the "active" area)
-        OUTPUT_HASH=$(echo "$CURRENT_OUTPUT" | tail -20 | md5sum | cut -d' ' -f1)
-
-        # Check if output has changed
-        if [ "$OUTPUT_HASH" = "$LAST_OUTPUT_HASH" ] && [ -n "$LAST_OUTPUT_HASH" ]; then
-            # Output unchanged
-            STABLE_COUNT=$((STABLE_COUNT + 1))
-
-            # Log every 4 checks (20 seconds)
-            if [ $((STABLE_COUNT % 4)) -eq 0 ]; then
-                STABLE_DURATION=$((STABLE_COUNT * 5))
-                log_message "Output stable for ${STABLE_DURATION}s (checking...)"
-            fi
-
-            # Check if we see the "Message:" prompt
-            HAS_PROMPT=$(is_claude_waiting_for_input "$CURRENT_OUTPUT" && echo "yes" || echo "no")
-
-            # If output stable for 20+ seconds AND we see prompt, definitely done
-            if [ $STABLE_COUNT -ge 4 ] && [ "$HAS_PROMPT" = "yes" ]; then
-                log_message "✅ Claude finished (stable 20s + prompt detected)"
-                CONSECUTIVE_FAILURES=0
-                break
-            fi
-
-            # If output stable for 40+ seconds, done even without seeing prompt
-            # (prompt might be scrolled out of view)
-            if [ $STABLE_COUNT -ge 8 ]; then
-                log_message "✅ Claude finished (stable 40s, assuming done)"
-                CONSECUTIVE_FAILURES=0
-                break
-            fi
-        else
-            # Output changed, Claude is working
-            if [ $STABLE_COUNT -gt 0 ]; then
-                log_message "Output changed after ${STABLE_COUNT} stable checks, Claude resumed working"
-            fi
-
-            STABLE_COUNT=0
-            LAST_ACTIVITY_TIME=$CURRENT_TIME
-            LAST_OUTPUT_HASH="$OUTPUT_HASH"
-        fi
-
-        # Check for total idle timeout (no activity for 10 minutes = likely stuck)
-        IDLE_TIME=$((CURRENT_TIME - LAST_ACTIVITY_TIME))
-        if [ $IDLE_TIME -gt 600 ]; then
-            log_message "⚠️  No output changes for $IDLE_TIME seconds - may be stuck"
-            # Watchdog will handle this
+        # Check for BAZINGA marker (simple and reliable!)
+        if is_claude_finished "$CURRENT_OUTPUT"; then
+            log_message "✅ Claude finished (BAZINGA marker detected)"
+            CONSECUTIVE_FAILURES=0
             break
         fi
 
-        # Max overall time per iteration: 60 minutes
+        # Log progress every minute
+        if [ $((CHECK_COUNT % 12)) -eq 0 ]; then
+            ELAPSED=$((CURRENT_TIME - WORK_START_TIME))
+            log_message "Still working... (${ELAPSED}s elapsed, waiting for BAZINGA)"
+        fi
+
+        # Timeout if no BAZINGA after 60 minutes
         ELAPSED=$((CURRENT_TIME - WORK_START_TIME))
         if [ $ELAPSED -gt 3600 ]; then
-            log_message "⚠️  Iteration exceeded 60 minutes"
+            log_message "⚠️  Iteration exceeded 60 minutes without BAZINGA marker"
+            log_message "This may indicate Claude didn't follow instructions or is stuck"
             break
         fi
     done

@@ -160,7 +160,9 @@ SOLUTIONS TO TRY:
 
 EXAMPLE APPROACHES:
 - [Reference similar patterns in the codebase if relevant]
-- [Suggest debugging commands to get more info]"
+- [Suggest debugging commands to get more info]
+
+IMPORTANT: When you finish your response, make sure the very last word you write is exactly: BAZINGA"
 
             REVIEWER_FEEDBACK=$(echo "$REVIEW_PROMPT" | claude --max-tokens 1000 2>/dev/null | tail -n +2)
 
