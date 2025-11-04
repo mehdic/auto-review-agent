@@ -11,8 +11,20 @@ The `planner-loop.sh` script has a bug where it:
 
 ## Quick Fix (Choose One Method)
 
-### Method 1: Direct Implementation (RECOMMENDED)
-Simplest approach - just starts implementation:
+### Method 1: Wake Up Existing Planner (RECOMMENDED if agents are running)
+If your agents are already running in tmux, use this to wake up the stuck planner:
+
+```bash
+cd /Users/mchaouachi/agent-system
+./wake-up-planner.sh
+```
+
+This sends commands to your EXISTING planner window in tmux - doesn't create new processes.
+
+---
+
+### Method 2: Direct Implementation (if no tmux session)
+If agents aren't running in tmux, this starts a fresh implementation:
 
 ```bash
 cd /Users/mchaouachi/agent-system
@@ -136,9 +148,10 @@ The fixed version properly continues to implementation after detecting approval.
 
 | Script | Purpose | When to Use |
 |--------|---------|-------------|
-| `diagnose-stuck.sh` | Analyze current state | First step to understand problem |
-| `direct-implement.sh` | Start implementation now | Quickest fix, bypasses all checks |
-| `nuclear-fix.sh` | Force implementation | When direct-implement doesn't work |
+| `wake-up-planner.sh` | Wake existing planner in tmux | **FIRST CHOICE** if agents running |
+| `diagnose-stuck.sh` | Analyze current state | Understand what's wrong |
+| `direct-implement.sh` | Start NEW Claude process | If no tmux session exists |
+| `nuclear-fix.sh` | Force implementation | When wake-up doesn't work |
 | `force-start-approved.sh` | Start if status=approved | Only works if status is exactly "approved" |
 | `force-implementation.sh` | Tmux-based force start | Only if tmux session exists |
 
