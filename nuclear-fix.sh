@@ -91,13 +91,16 @@ if [ "$DIRECT_CALL" == "1" ]; then
 else
     # Use tmux
     echo "Sending commands to tmux planner window..."
-    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH" Enter
+    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 1
-    tmux send-keys -t agent_system_spec:planner "claude" Enter
+    tmux send-keys -t agent_system_spec:planner "claude"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 3
 
     # Send the prompt
-    tmux send-keys -t agent_system_spec:planner "$IMPL_PROMPT" Enter
+    tmux send-keys -t agent_system_spec:planner "$IMPL_PROMPT"
+    tmux send-keys -t agent_system_spec:planner Enter
 
     echo ""
     echo -e "${GREEN}✅ Implementation command sent to tmux!${NC}"

@@ -65,25 +65,31 @@ case $COMMAND in
                 echo "Triggering proposal creation..."
                 tmux send-keys -t agent_system_spec:planner C-c Enter 2>/dev/null
                 sleep 2
-                tmux send-keys -t agent_system_spec:planner "claude" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:planner "claude"
+    tmux send-keys -t agent_system_spec:planner Enter 2>/dev/null
                 sleep 3
-                tmux send-keys -t agent_system_spec:planner "Read /Users/mchaouachi/agent-system/prompts/planner_agent_spec.txt and $PROJECT_PATH/specs/999-fix-remaining-tests/spec.md. Create proposals in $PROJECT_PATH/coordination/task_proposals.json" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:planner "Read /Users/mchaouachi/agent-system/prompts/planner_agent_spec.txt and $PROJECT_PATH/specs/999-fix-remaining-tests/spec.md. Create proposals in $PROJECT_PATH/coordination/task_proposals.json"
+    tmux send-keys -t agent_system_spec:planner Enter 2>/dev/null
                 
             elif [ "$STATUS" == "awaiting_review" ]; then
                 echo "Triggering review..."
                 tmux send-keys -t agent_system_spec:reviewer C-c Enter 2>/dev/null
                 sleep 2
-                tmux send-keys -t agent_system_spec:reviewer "claude" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:reviewer "claude"
+    tmux send-keys -t agent_system_spec:reviewer Enter 2>/dev/null
                 sleep 3
-                tmux send-keys -t agent_system_spec:reviewer "Read $PROJECT_PATH/coordination/task_proposals.json and approve the best approach with status: approved" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:reviewer "Read $PROJECT_PATH/coordination/task_proposals.json and approve the best approach with status: approved"
+    tmux send-keys -t agent_system_spec:reviewer Enter 2>/dev/null
                 
             elif [ "$STATUS" == "approved" ]; then
                 echo "Triggering implementation..."
                 tmux send-keys -t agent_system_spec:planner C-c Enter 2>/dev/null
                 sleep 2
-                tmux send-keys -t agent_system_spec:planner "claude" Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:planner "claude"
+    tmux send-keys -t agent_system_spec:planner Enter 2>/dev/null
                 sleep 3
-                tmux send-keys -t agent_system_spec:planner "Read $PROJECT_PATH/coordination/task_proposals.json. Implement the approved approach to fix 75 tests in $PROJECT_PATH. Work autonomously." Enter 2>/dev/null
+                tmux send-keys -t agent_system_spec:planner "Read $PROJECT_PATH/coordination/task_proposals.json. Implement the approved approach to fix 75 tests in $PROJECT_PATH. Work autonomously."
+    tmux send-keys -t agent_system_spec:planner Enter 2>/dev/null
             fi
             
             echo -e "${GREEN}Fix attempted. Check status in 30 seconds.${NC}"

@@ -56,9 +56,11 @@ echo -e "${GREEN}Forcing implementation to start...${NC}"
 
 if [ "$NEEDS_CLAUDE" == "1" ]; then
     echo "Starting Claude..."
-    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH" Enter
+    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 1
-    tmux send-keys -t agent_system_spec:planner "claude" Enter
+    tmux send-keys -t agent_system_spec:planner "claude"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 4
 fi
 
@@ -87,7 +89,8 @@ Fix the tests systematically.
 Work autonomously without asking permission between fixes.
 Continue until all 183 tests pass.
 
-Begin implementation now." Enter
+Begin implementation now."
+    tmux send-keys -t agent_system_spec:planner Enter
 
 echo ""
 echo -e "${GREEN}✅ Implementation command sent!${NC}"

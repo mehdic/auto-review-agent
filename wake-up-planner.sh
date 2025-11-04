@@ -68,23 +68,29 @@ if echo "$WINDOW_STATE" | grep -q "claude>"; then
     echo "Claude is already running in planner window - sending instructions directly..."
 
     # Send instructions to existing Claude session
-    tmux send-keys -t agent_system_spec:planner "Read the file: $PROPOSALS_FILE" Enter
+    tmux send-keys -t agent_system_spec:planner "Read the file: $PROPOSALS_FILE"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 2
-    tmux send-keys -t agent_system_spec:planner "The status is 'implementing' and chosen_approach is '$CHOSEN'. Implement the approved plan. Start by running mvn test in $PROJECT_PATH to see current failures. Then fix tests systematically according to the workstream structure in the file. Work autonomously until all 183 tests pass." Enter
+    tmux send-keys -t agent_system_spec:planner "The status is 'implementing' and chosen_approach is '$CHOSEN'. Implement the approved plan. Start by running mvn test in $PROJECT_PATH to see current failures. Then fix tests systematically according to the workstream structure in the file. Work autonomously until all 183 tests pass."
+    tmux send-keys -t agent_system_spec:planner Enter
 
 elif echo "$WINDOW_STATE" | grep -qE "\$|#|%"; then
     echo "Planner is at shell prompt - starting Claude..."
 
     # Start Claude
-    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH" Enter
+    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 1
-    tmux send-keys -t agent_system_spec:planner "claude" Enter
+    tmux send-keys -t agent_system_spec:planner "claude"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 3
 
     # Send instructions
-    tmux send-keys -t agent_system_spec:planner "Read the proposals file: $PROPOSALS_FILE" Enter
+    tmux send-keys -t agent_system_spec:planner "Read the proposals file: $PROPOSALS_FILE"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 2
-    tmux send-keys -t agent_system_spec:planner "Status is 'implementing' with chosen_approach '$CHOSEN'. Implement the approved plan to fix all 75 failing tests. Start by running mvn test to see failures, then fix systematically. Work autonomously." Enter
+    tmux send-keys -t agent_system_spec:planner "Status is 'implementing' with chosen_approach '$CHOSEN'. Implement the approved plan to fix all 75 failing tests. Start by running mvn test to see failures, then fix systematically. Work autonomously."
+    tmux send-keys -t agent_system_spec:planner Enter
 
 else
     echo "Unknown state - will try to reset and start..."
@@ -96,13 +102,16 @@ else
     sleep 1
 
     # Start Claude
-    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH" Enter
+    tmux send-keys -t agent_system_spec:planner "cd $PROJECT_PATH"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 1
-    tmux send-keys -t agent_system_spec:planner "claude" Enter
+    tmux send-keys -t agent_system_spec:planner "claude"
+    tmux send-keys -t agent_system_spec:planner Enter
     sleep 3
 
     # Send instructions
-    tmux send-keys -t agent_system_spec:planner "Read $PROPOSALS_FILE and implement the approved $CHOSEN plan. Start with mvn test in $PROJECT_PATH then fix all 75 failing tests autonomously." Enter
+    tmux send-keys -t agent_system_spec:planner "Read $PROPOSALS_FILE and implement the approved $CHOSEN plan. Start with mvn test in $PROJECT_PATH then fix all 75 failing tests autonomously."
+    tmux send-keys -t agent_system_spec:planner Enter
 fi
 
 echo ""
