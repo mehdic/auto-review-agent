@@ -12,30 +12,38 @@ find_spec() {
     spec_number=$(printf "%03d" "$spec_number")
 
     # Find the spec folder that starts with this number
-    local spec_dir=$(find "$project_path/specs" -maxdepth 1 -type d -name "${spec_number}-*" | head -1)
+    local spec_dir=$(find "$project_path/specs" -maxdepth 1 -type d -name "${spec_number}-*" 2>/dev/null | head -1)
 
     if [ -z "$spec_dir" ]; then
-        echo "ERROR: No spec folder found for number $spec_number in $project_path/specs"
+        # Debug: Check if specs directory exists
+        if [ ! -d "$project_path/specs" ]; then
+            echo "ERROR: Specs directory not found: $project_path/specs" >&2
+        else
+            echo "ERROR: No spec folder found matching pattern '${spec_number}-*' in $project_path/specs" >&2
+            echo "DEBUG: Looking for pattern: ${spec_number}-*" >&2
+            echo "DEBUG: Available specs:" >&2
+            ls -1 "$project_path/specs" 2>/dev/null | grep "^${spec_number}-" >&2 || echo "  (none matching ${spec_number}-*)" >&2
+        fi
         return 1
     fi
 
     local tasks_file="$spec_dir/tasks.md"
 
     if [ ! -f "$tasks_file" ]; then
-        echo "ERROR: tasks.md not found in $spec_dir"
+        echo "ERROR: tasks.md not found in $spec_dir" >&2
         return 1
     fi
 
-    # Return the paths
-    echo "SPEC_DIR=$spec_dir"
-    echo "TASKS_FILE=$tasks_file"
-    echo "SPEC_NAME=$(basename $spec_dir)"
+    # Return the paths (to stdout, for eval capture)
+    echo "SPEC_DIR='$spec_dir'"
+    echo "TASKS_FILE='$tasks_file'"
+    echo "SPEC_NAME='$(basename "$spec_dir")'"
 
     return 0
 }
 
 # If called directly (not sourced)
-if [ "${BASH_SOURCE[0]}" -eq "$0" ]; then
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     if [ -z "$1" ] || [ -z "$2" ]; then
         echo "Usage: $0 <project_path> <spec_number>"
         echo "Example: $0 /path/to/project 001"
