@@ -151,9 +151,11 @@ echo ""
 sleep 3
 
 # Start Claude with the unified instructions
-echo "Read and follow the instructions in: $COORDINATION_DIR/unified_instructions.txt"
+echo "Sending instructions to Claude..."
 echo ""
-claude
+
+# Send the instructions file to Claude
+cat "$COORDINATION_DIR/unified_instructions.txt" | claude
 
 log_message ""
 log_message "Claude session ended"
