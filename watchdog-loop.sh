@@ -43,6 +43,12 @@ while true; do
     sleep $CHECK_INTERVAL
     CURRENT_TIME=$(date +%s)
 
+    # Check if session still exists (exit gracefully if user killed it)
+    if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        log_message "Session $SESSION_NAME no longer exists - exiting gracefully"
+        exit 0
+    fi
+
     # CRITICAL CHECK 1: Is implementer-loop.sh still running?
     if ! is_implementer_alive "$SESSION_NAME" "implementer"; then
         log_message "❌ Implementer loop crashed or exited!"

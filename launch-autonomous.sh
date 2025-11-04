@@ -124,6 +124,17 @@ if [ -n "$EXISTING_SESSIONS" ]; then
             tmux kill-session -t "$sess" 2>/dev/null
         done
         echo -e "${GREEN}✓ Existing sessions killed${NC}"
+
+        # Kill any zombie background processes for this spec
+        echo -e "${CYAN}Cleaning up zombie processes...${NC}"
+        ZOMBIE_COUNT=0
+        for pid in $(ps aux | grep -E "(implementer-loop|watchdog-loop).*${SPEC_NUMBER}" | grep -v grep | awk '{print $2}'); do
+            kill "$pid" 2>/dev/null && ZOMBIE_COUNT=$((ZOMBIE_COUNT + 1))
+        done
+        if [ $ZOMBIE_COUNT -gt 0 ]; then
+            echo -e "${GREEN}✓ Killed $ZOMBIE_COUNT zombie processes${NC}"
+            sleep 2  # Give them time to die
+        fi
     else
         echo -e "${RED}Aborted - existing sessions still running${NC}"
         exit 1

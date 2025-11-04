@@ -123,7 +123,14 @@ Start working now."
     log_message "Waiting for Claude to be ready..."
     for i in {1..30}; do
         sleep 2
-        CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -20)
+
+        # Check if session still exists
+        if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+            log_message "Session $SESSION_NAME no longer exists - exiting gracefully"
+            exit 0
+        fi
+
+        CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -20 2>/dev/null)
 
         if is_waiting_for_input "$CURRENT_OUTPUT"; then
             log_message "Claude is ready for input"
@@ -163,8 +170,19 @@ Start working now."
         CURRENT_TIME=$(date +%s)
         CHECK_COUNT=$((CHECK_COUNT + 1))
 
+        # Check if session still exists (exit gracefully if killed)
+        if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+            log_message "Session $SESSION_NAME no longer exists - exiting gracefully"
+            exit 0
+        fi
+
         # Capture current output
-        CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -50)
+        CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -50 2>/dev/null)
+
+        if [ -z "$CURRENT_OUTPUT" ]; then
+            log_message "⚠️ Cannot capture pane output - window may have been closed"
+            exit 1
+        fi
 
         # Check for BAZINGA marker (simple and reliable!)
         if is_claude_finished "$CURRENT_OUTPUT"; then
