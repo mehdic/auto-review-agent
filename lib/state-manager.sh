@@ -133,12 +133,13 @@ is_waiting_for_input() {
     echo "$output" | tail -10 | grep -qE "(^>|^\$|^claude>|Waiting for|Enter your|Press any key|^Please |^Choose |^\?)"
 }
 
-# Detect if asking a question (more robust patterns)
+# Detect if asking a question (STRICT patterns to avoid false positives)
 is_asking_question() {
     local output="$1"
 
-    # More comprehensive question patterns
-    echo "$output" | tail -20 | grep -qiE "(should I|would you like|do you want|which.*prefer|what.*better|need.*input|please.*confirm|approve|permission|which option|select.*option|choose between|or would you|proceed\?|continue\?)"
+    # ONLY match ACTUAL questions asking for user input
+    # Avoid matching normal working statements
+    echo "$output" | tail -20 | grep -qiE "(should I proceed|would you like me to|do you want me to|need your input|please confirm|waiting for approval|which option should I choose|waiting for your response)"
 }
 
 # Check if output indicates error/stuck state
@@ -148,12 +149,13 @@ is_error_state() {
     echo "$output" | tail -20 | grep -qiE "(error:|exception|traceback|fatal|failed|unable to|cannot|could not|permission denied|command not found)"
 }
 
-# Detect if implementer is skipping or giving up on tasks
+# Detect if implementer is skipping or giving up on tasks (STRICT patterns)
 is_giving_up() {
     local output="$1"
 
-    # Patterns that indicate giving up
-    echo "$output" | tail -30 | grep -qiE "(skipping|skip this|moving on|can't fix|unable to fix|too complex|requires.*work|will need|leaving.*for later|TODO|FIXME|not possible|blocked by|requires feature)"
+    # ONLY match CLEAR statements of giving up
+    # Avoid matching code comments or normal progress statements
+    echo "$output" | tail -30 | grep -qiE "(I'm skipping|I'll skip this|I'm moving on without|I can't fix this|I'm unable to fix|giving up on|leaving this unfixed|marking.*as TODO|I'll leave this for later|blocked and cannot proceed)"
 }
 
 # Extract what the implementer is giving up on
