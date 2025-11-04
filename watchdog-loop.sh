@@ -179,11 +179,18 @@ IMPORTANT: When you finish your response, make sure the very last word you write
             tmux send-keys -t "$SESSION_NAME:implementer" Enter
             sleep 2
 
-            tmux send-keys -t "$SESSION_NAME:implementer" "TECH LEAD FEEDBACK (Attempt $RETRY_COUNT/3): Your tech lead has analyzed your situation. Here are specific solutions to try:
+            # Send line-by-line with -- to prevent flag interpretation
+            FEEDBACK_MESSAGE="TECH LEAD FEEDBACK (Attempt $RETRY_COUNT/3): Your tech lead has analyzed your situation. Here are specific solutions to try:
 
 $REVIEWER_FEEDBACK
 
 DO NOT SKIP THIS TASK. Try each solution systematically. Report results after each attempt."
+
+            echo "$FEEDBACK_MESSAGE" | while IFS= read -r line; do
+                tmux send-keys -t "$SESSION_NAME:implementer" -- "$line"
+                tmux send-keys -t "$SESSION_NAME:implementer" Enter
+                sleep 0.05
+            done
             tmux send-keys -t "$SESSION_NAME:implementer" Enter
 
             sleep 10
@@ -195,7 +202,8 @@ DO NOT SKIP THIS TASK. Try each solution systematically. Report results after ea
             tmux send-keys -t "$SESSION_NAME:implementer" Enter
             sleep 2
 
-            tmux send-keys -t "$SESSION_NAME:implementer" "ULTRATHINK MODE ENABLED: You have exhausted 3 retry attempts. Use extended thinking to deeply analyze this problem. Think step-by-step about:
+            # Send line-by-line with -- to prevent flag interpretation
+            ULTRATHINK_MESSAGE="ULTRATHINK MODE ENABLED: You have exhausted 3 retry attempts. Use extended thinking to deeply analyze this problem. Think step-by-step about:
 1. Root cause analysis - what is the REAL underlying issue?
 2. Have you checked ALL relevant files, configs, dependencies?
 3. Are there hidden assumptions you're making?
@@ -203,6 +211,12 @@ DO NOT SKIP THIS TASK. Try each solution systematically. Report results after ea
 5. Break the problem into the smallest possible pieces
 
 Use <Thinking> tags to show your deep analysis. Then implement the solution. This is attempt 4 - we MUST solve this."
+
+            echo "$ULTRATHINK_MESSAGE" | while IFS= read -r line; do
+                tmux send-keys -t "$SESSION_NAME:implementer" -- "$line"
+                tmux send-keys -t "$SESSION_NAME:implementer" Enter
+                sleep 0.05
+            done
             tmux send-keys -t "$SESSION_NAME:implementer" Enter
 
             sleep 15
