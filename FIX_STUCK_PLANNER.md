@@ -131,16 +131,23 @@ If none of the above work:
 
 ---
 
-## Permanent Fix
+## Permanent Fix (ALREADY APPLIED)
 
-To prevent this in the future, replace the planner loop:
+✅ **The loops have been permanently fixed!**
 
-```bash
-cd /Users/mchaouachi/agent-system
-cp planner-loop-fixed.sh planner-loop.sh
-```
+Both `planner-loop.sh` and `reviewer-loop.sh` are now **generic loops** that:
+- Work with ANY spec.md file
+- Continue until ALL success criteria are met
+- Never exit prematurely
+- Verify completion before exiting
 
-The fixed version properly continues to implementation after detecting approval.
+**Key improvements:**
+1. ✅ Planner runs in continuous loop until work complete
+2. ✅ Uses `check-completion.sh` to verify against spec
+3. ✅ Reviewer independently verifies before allowing exit
+4. ✅ Works with any task, not just test fixing
+
+See `GENERIC_LOOPS_GUIDE.md` for full documentation.
 
 ---
 

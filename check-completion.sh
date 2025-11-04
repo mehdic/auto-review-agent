@@ -1,0 +1,68 @@
+#!/bin/bash
+# Generic completion checker - works with any spec.md file
+# Parses "Definition of Done" and "Success Criteria" to determine if work is complete
+
+PROJECT_PATH="$1"
+SPEC_FILE="$2"
+VERBOSE="${3:-false}"
+
+if [ -z "$PROJECT_PATH" ] || [ -z "$SPEC_FILE" ]; then
+    echo "Usage: $0 <project_path> <spec_file> [verbose]"
+    exit 2
+fi
+
+if [ ! -f "$SPEC_FILE" ]; then
+    echo "ERROR: Spec file not found: $SPEC_FILE"
+    exit 2
+fi
+
+log() {
+    if [ "$VERBOSE" = "true" ]; then
+        echo "$1"
+    fi
+}
+
+# Ask Claude to evaluate completion based on the spec
+log "Checking completion against spec: $SPEC_FILE"
+
+cd "$PROJECT_PATH" 2>/dev/null || true
+
+RESULT=$(claude <<EOF
+You are a completion checker agent.
+
+Read the specification file: $SPEC_FILE
+
+Your task: Determine if the work described in this specification is COMPLETE.
+
+Look for these sections in the spec:
+1. "Definition of Done"
+2. "Success Criteria"
+3. "Acceptance Scenarios"
+
+Then evaluate the CURRENT STATE of the project at: $PROJECT_PATH
+
+For example:
+- If spec says "All 183 tests passing", run the tests and check
+- If spec says "Feature X implemented", verify the feature exists
+- If spec says "API endpoint /foo working", test the endpoint
+- If spec says "Build succeeds", run the build
+
+Respond with EXACTLY ONE LINE:
+- If ALL success criteria are met: "COMPLETE"
+- If ANY criteria not met: "INCOMPLETE: <brief reason>"
+
+Do not provide explanations beyond that one line.
+Evaluate the actual current state, don't assume anything.
+EOF
+)
+
+log "Result: $RESULT"
+
+# Check the result
+if echo "$RESULT" | grep -qi "^COMPLETE"; then
+    [ "$VERBOSE" = "true" ] && echo "✅ Work is COMPLETE"
+    exit 0
+else
+    [ "$VERBOSE" = "true" ] && echo "❌ Work is INCOMPLETE: $RESULT"
+    exit 1
+fi
