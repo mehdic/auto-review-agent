@@ -179,8 +179,15 @@ IMPLEMENTER_PID=$!
 echo "$IMPLEMENTER_PID" > "$COORDINATION_DIR/implementer.pid"
 sleep 2
 
-# Window 1: Watchdog
-echo -e "${CYAN}Starting watchdog...${NC}"
+# Window 1: Show watchdog log (tech lead activity)
+echo -e "${CYAN}Creating watchdog log viewer...${NC}"
+tmux new-window -t "$SESSION_NAME" -n "tech-lead" -c "$PROJECT_PATH"
+tmux send-keys -t "$SESSION_NAME:tech-lead" "tail -f '$COORDINATION_DIR/logs/watchdog.log'"
+tmux send-keys -t "$SESSION_NAME:tech-lead" Enter
+sleep 1
+
+# Run watchdog-loop.sh in background (not in a tmux window)
+echo -e "${CYAN}Starting watchdog loop in background...${NC}"
 WATCHDOG_SCRIPT="$SCRIPT_DIR/watchdog-loop.sh"
 
 if [ ! -f "$WATCHDOG_SCRIPT" ]; then
@@ -189,9 +196,10 @@ if [ ! -f "$WATCHDOG_SCRIPT" ]; then
     exit 1
 fi
 
-tmux new-window -t "$SESSION_NAME" -n "watchdog" -c "$PROJECT_PATH"
-tmux send-keys -t "$SESSION_NAME:watchdog" "$WATCHDOG_SCRIPT '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
-tmux send-keys -t "$SESSION_NAME:watchdog" Enter
+# Run in background with output to log
+nohup "$WATCHDOG_SCRIPT" "$PROJECT_PATH" "$TASKS_FILE" "$SPEC_NAME" "$SESSION_NAME" > "$COORDINATION_DIR/logs/watchdog-loop.log" 2>&1 &
+WATCHDOG_PID=$!
+echo "$WATCHDOG_PID" > "$COORDINATION_DIR/watchdog.pid"
 sleep 2
 
 # Window 2: Monitor
@@ -211,9 +219,9 @@ echo ""
 echo -e "${CYAN}Session:${NC} ${YELLOW}$SESSION_NAME${NC}"
 echo ""
 echo -e "${CYAN}Windows:${NC}"
-echo -e "  ${GREEN}0: implementer${NC} - Does the work (you can watch Claude here)"
-echo -e "  ${GREEN}1: watchdog${NC}    - Monitors and guides implementer"
-echo -e "  ${GREEN}2: monitor${NC}     - Shows current status + logs"
+echo -e "  ${GREEN}0: developer${NC}   - Claude Code (interactive developer session)"
+echo -e "  ${GREEN}1: tech-lead${NC}   - Tech lead log (live feedback and observations)"
+echo -e "  ${GREEN}2: monitor${NC}     - State file + recent activity"
 echo ""
 echo -e "${CYAN}Commands:${NC}"
 echo -e "  Attach:  ${YELLOW}tmux attach -t $SESSION_NAME${NC}"
@@ -221,9 +229,13 @@ echo -e "  Detach:  ${YELLOW}Ctrl+b d${NC}"
 echo -e "  Windows: ${YELLOW}Ctrl+b 0/1/2${NC}"
 echo -e "  Stop:    ${YELLOW}tmux kill-session -t $SESSION_NAME${NC}"
 echo ""
-echo -e "${CYAN}Logs:${NC}"
-echo -e "  Implementer: ${YELLOW}tail -f $COORDINATION_DIR/logs/implementer.log${NC}"
-echo -e "  Watchdog:    ${YELLOW}tail -f $COORDINATION_DIR/logs/watchdog.log${NC}"
+echo -e "${CYAN}Background Processes:${NC}"
+echo -e "  Developer loop: ${YELLOW}PID $(cat $COORDINATION_DIR/implementer.pid 2>/dev/null || echo 'starting...')${NC} → ${YELLOW}$COORDINATION_DIR/logs/implementer-loop.log${NC}"
+echo -e "  Tech lead loop: ${YELLOW}PID $(cat $COORDINATION_DIR/watchdog.pid 2>/dev/null || echo 'starting...')${NC} → ${YELLOW}$COORDINATION_DIR/logs/watchdog-loop.log${NC}"
+echo ""
+echo -e "${CYAN}Activity Logs:${NC}"
+echo -e "  Developer:  ${YELLOW}$COORDINATION_DIR/logs/implementer.log${NC}"
+echo -e "  Tech Lead:  ${YELLOW}$COORDINATION_DIR/logs/watchdog.log${NC}"
 echo ""
 echo -e "${CYAN}State File:${NC}"
 echo -e "  ${YELLOW}cat $COORDINATION_DIR/state.json | jq .${NC}"
