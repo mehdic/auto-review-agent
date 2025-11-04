@@ -1,5 +1,5 @@
 #!/bin/bash
-# Implementer Loop - Continuously implements tasks from tasks.md
+# Implementer Loop - Works with PERSISTENT Claude session in tmux
 # This is the WORKER that does the actual implementation
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,7 +11,7 @@ SPEC_NAME="$3"
 SESSION_NAME="$4"
 
 # Validation
-if [ -z "$PROJECT_PATH" ] || [ -z "$TASKS_FILE" ] || [ -z "$SPEC_NAME" ]; then
+if [ -z "$PROJECT_PATH" ] || [ -z "$TASKS_FILE" ] || [ -z "$SPEC_NAME" ] || [ -z "$SESSION_NAME" ]; then
     echo "Usage: $0 <project_path> <tasks_file> <spec_name> <session_name>"
     exit 1
 fi
@@ -37,8 +37,27 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] IMPLEMENTER: $1" | tee -a "$LOG_FILE"
 }
 
+# Detect if Claude is waiting for input (shows prompt)
+is_claude_waiting_for_input() {
+    local output="$1"
+    # Claude shows status messages while working: "Wandering...", "Hatching...", etc.
+    # When these are gone and output is stable, Claude is waiting for input
+
+    # Check for working indicators
+    if echo "$output" | tail -10 | grep -qE "(Wandering\.\.\.|Hatching\.\.\.|Pondering\.\.\.|Thinking\.\.\.|Working\.\.\.)"; then
+        return 1  # Still working
+    fi
+
+    # Also check for the prompt/message input area
+    if echo "$output" | tail -5 | grep -qE "(Message:|^>|^│)"; then
+        return 0  # Waiting for input
+    fi
+
+    return 1  # Unclear, assume still working
+}
+
 log_message "═══════════════════════════════════════════════════════════"
-log_message "Implementer Loop Starting"
+log_message "Implementer Loop Starting (Persistent Claude Session)"
 log_message "Project: $PROJECT_PATH"
 log_message "Tasks: $TASKS_FILE"
 log_message "Spec: $SPEC_NAME"
@@ -54,23 +73,26 @@ if ! cd "$PROJECT_PATH"; then
     exit 1
 fi
 
-# Main continuous loop
+# Start Claude ONCE in this window (NOT in a loop)
+log_message "Starting Claude Code session..."
+tmux send-keys -t "$SESSION_NAME:implementer" "cd '$PROJECT_PATH' && claude"
+tmux send-keys -t "$SESSION_NAME:implementer" Enter
+sleep 3
+
+# Main loop - send prompts to existing Claude session
 ITERATION=1
-MAX_ITERATIONS=1000  # Prevent infinite loops
+MAX_ITERATIONS=1000
 CONSECUTIVE_FAILURES=0
 MAX_CONSECUTIVE_FAILURES=5
 
 while [ $ITERATION -le $MAX_ITERATIONS ]; do
     log_message "───────────────────────────────────────────────────────────"
-    log_message "ITERATION $ITERATION (Consecutive failures: $CONSECUTIVE_FAILURES)"
+    log_message "ITERATION $ITERATION"
     log_message "───────────────────────────────────────────────────────────"
 
     update_state "$STATE_FILE" "implementing" "Iteration $ITERATION - Working on tasks"
 
-    # Start Claude for this iteration
-    log_message "Starting Claude for implementation..."
-
-    # Create the implementation prompt (sanitize SPEC_NAME to avoid injection)
+    # Create the implementation prompt
     SAFE_SPEC_NAME=$(echo "$SPEC_NAME" | tr -d '\n\r' | head -c 200)
 
     PROMPT="You are an autonomous implementer working on: ${SAFE_SPEC_NAME}
@@ -81,84 +103,114 @@ Your job:
 1. Read ALL tasks in the file
 2. Implement them systematically, one by one
 3. Work autonomously - when you face choices, pick the best option and continue
-4. Do NOT stop to ask questions - make reasonable decisions
-5. Update progress by modifying $STATE_FILE (DO NOT use update_state function, modify the file directly)
+4. DO NOT stop to ask questions - make reasonable decisions
+5. Update progress by modifying $STATE_FILE
 6. Continue until 100% OF ALL TASKS ARE COMPLETE
 
 CRITICAL REQUIREMENTS - 100% COMPLETION:
 - You MUST complete EVERY task in the tasks.md file
 - You MUST fix EVERY failing test until ALL tests pass
-- DO NOT skip any task for any reason (\"requires features\", \"too complex\", etc)
+- DO NOT skip any task for any reason
 - DO NOT mark work as complete until 100% success is achieved
 - If you encounter a problem, you MUST solve it, not skip it
-- There is a reviewer watching who will send you solutions if you get stuck
-- Partial completion (\"I fixed 4 out of 71\") is NOT acceptable
+- Partial completion is NOT acceptable
 
-IMPORTANT - State File Format:
-The state file is at: $STATE_FILE
-To update it, write the ENTIRE state including these fields:
-{
-  \"status\": \"implementing\" | \"completed\" | \"error\",
-  \"last_update\": \"ISO timestamp\",
-  \"message\": \"current status message\",
-  \"current_task\": \"description of task you're working on\",
-  \"completed_tasks\": [\"task1\", \"task2\"],
-  \"total_tasks\": number,
-  \"iteration\": $ITERATION
-}
+State file: $STATE_FILE
+Iteration: $ITERATION
+Previous status: $(read_state "$STATE_FILE" "status" "unknown")
 
-When you complete 100% of ALL tasks, set status to \"completed\".
+When you complete 100% of tasks, update $STATE_FILE with status=\"completed\".
 
-ANTI-PATTERNS (DO NOT DO THESE):
-- ❌ \"I'll skip this test because it requires feature X\"
-- ❌ \"Moving on to the next task\" (without finishing current one)
-- ❌ \"This is too complex for me to handle\"
-- ❌ \"Leaving this as TODO for later\"
-- ❌ \"I can't fix this\" (you can, keep trying)
+Start working now."
 
-WHAT TO DO WHEN STUCK:
-- State clearly what the problem is
-- The reviewer will provide specific solutions
-- Try each solution systematically
-- Report results
-- Persist until success
+    # Wait for Claude to be ready for input
+    log_message "Waiting for Claude to be ready..."
+    for i in {1..30}; do
+        sleep 2
+        CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -20)
 
-SUCCESS CRITERIA:
-- ALL tests passing (183/183, not 116/183)
-- ALL tasks completed
-- No skipped items
-- No TODO/FIXME comments
-- status=\"completed\" in $STATE_FILE
-
-Start with the first uncompleted task (check $STATE_FILE for progress).
-ITERATION: $ITERATION
-Previous status: $(read_state "$STATE_FILE" "status" "unknown")"
-
-    # Send prompt to Claude and capture output
-    echo "$PROMPT" | claude 2>&1 | tee -a "$LOG_FILE"
-
-    CLAUDE_EXIT_CODE=$?
-
-    log_message "Claude exited with code: $CLAUDE_EXIT_CODE"
-
-    # Handle different exit codes
-    if [ $CLAUDE_EXIT_CODE -eq 0 ]; then
-        log_message "✅ Claude exited cleanly"
-        CONSECUTIVE_FAILURES=0
-    elif [ $CLAUDE_EXIT_CODE -eq 130 ]; then
-        log_message "⚠️  Claude interrupted (Ctrl+C)"
-        update_state "$STATE_FILE" "interrupted" "User interrupted execution"
-        exit 130
-    else
-        log_message "❌ Claude exited with error code $CLAUDE_EXIT_CODE"
-        CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
-
-        if [ $CONSECUTIVE_FAILURES -ge $MAX_CONSECUTIVE_FAILURES ]; then
-            log_message "💀 Too many consecutive failures ($CONSECUTIVE_FAILURES)"
-            update_state "$STATE_FILE" "failed" "Too many consecutive Claude failures"
-            exit 1
+        if is_claude_waiting_for_input "$CURRENT_OUTPUT"; then
+            log_message "Claude is ready for input"
+            break
         fi
-    fi
+
+        if [ $i -eq 30 ]; then
+            log_message "⚠️  Timeout waiting for Claude to be ready"
+            CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
+            break
+        fi
+    done
+
+    # Send the prompt to Claude
+    log_message "Sending prompt to Claude..."
+
+    # Send prompt line by line to avoid issues
+    echo "$PROMPT" | while IFS= read -r line; do
+        tmux send-keys -t "$SESSION_NAME:implementer" "$line"
+        tmux send-keys -t "$SESSION_NAME:implementer" Enter
+        sleep 0.1
+    done
+
+    # Send final Enter to submit
+    tmux send-keys -t "$SESSION_NAME:implementer" Enter
+
+    # Wait for Claude to finish processing (detect when it's waiting for input again)
+    log_message "Waiting for Claude to finish working..."
+    WORK_START_TIME=$(date +%s)
+    LAST_ACTIVITY_TIME=$(date +%s)
+    LAST_OUTPUT_HASH=""
+    STABLE_COUNT=0  # How many checks in a row output has been stable
+
+    while true; do
+        sleep 5
+        CURRENT_TIME=$(date +%s)
+
+        # Capture current output
+        CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -50)
+
+        # Check if Claude is waiting for input (no "Wandering..." etc)
+        if is_claude_waiting_for_input "$CURRENT_OUTPUT"; then
+            # Output stable? Check if it's been the same for multiple checks
+            OUTPUT_HASH=$(echo "$CURRENT_OUTPUT" | tail -20 | md5sum | cut -d' ' -f1)
+
+            if [ "$OUTPUT_HASH" = "$LAST_OUTPUT_HASH" ]; then
+                STABLE_COUNT=$((STABLE_COUNT + 1))
+
+                # If output stable for 4 checks (20 seconds), Claude is done
+                if [ $STABLE_COUNT -ge 4 ]; then
+                    log_message "✅ Claude finished this turn (output stable for 20s)"
+                    CONSECUTIVE_FAILURES=0
+                    break
+                fi
+            else
+                # Output changed, reset counter
+                STABLE_COUNT=0
+                LAST_ACTIVITY_TIME=$CURRENT_TIME
+            fi
+
+            LAST_OUTPUT_HASH="$OUTPUT_HASH"
+        else
+            # Still seeing "Wandering..." etc, Claude is actively working
+            STABLE_COUNT=0
+            LAST_ACTIVITY_TIME=$CURRENT_TIME
+            LAST_OUTPUT_HASH=$(echo "$CURRENT_OUTPUT" | tail -20 | md5sum | cut -d' ' -f1)
+        fi
+
+        # Check for total idle timeout (no activity at all)
+        IDLE_TIME=$((CURRENT_TIME - LAST_ACTIVITY_TIME))
+        if [ $IDLE_TIME -gt 600 ]; then
+            log_message "⚠️  Claude appears completely idle for $IDLE_TIME seconds"
+            # Watchdog will handle this
+            break
+        fi
+
+        # Max overall time per iteration: 60 minutes
+        ELAPSED=$((CURRENT_TIME - WORK_START_TIME))
+        if [ $ELAPSED -gt 3600 ]; then
+            log_message "⚠️  Iteration exceeded 60 minutes"
+            break
+        fi
+    done
 
     # Check if work is actually complete
     STATUS=$(read_state "$STATE_FILE" "status" "unknown")
@@ -167,7 +219,7 @@ Previous status: $(read_state "$STATE_FILE" "status" "unknown")"
     if [ "$STATUS" = "completed" ] || [ "$STATUS" = "complete" ] || [ "$STATUS" = "done" ]; then
         log_message "✅ Work marked as COMPLETED"
 
-        # Double-check by reading more details
+        # Verify completion
         COMPLETED_COUNT=$(python3 -c "
 import json
 try:
@@ -182,6 +234,10 @@ except:
         log_message "Tasks completed: $COMPLETED_COUNT"
         log_message "Implementer exiting successfully"
         update_state "$STATE_FILE" "completed" "All tasks implemented successfully at iteration $ITERATION"
+
+        # Close Claude session
+        tmux send-keys -t "$SESSION_NAME:implementer" C-c
+        sleep 1
         exit 0
     fi
 
@@ -192,11 +248,19 @@ except:
         exit 1
     fi
 
-    # Claude exited but work not complete
-    log_message "⚠️  Claude exited but work not complete (status: $STATUS)"
-    log_message "Waiting 30 seconds before retry..."
+    # Check for blocked status (from watchdog)
+    if [ "$STATUS" = "blocked" ]; then
+        log_message "⚠️  Work blocked - requires manual intervention"
+        log_message "Pausing for user to review and fix"
+        sleep 300  # Wait 5 minutes for user intervention
+        # Continue trying after pause
+    fi
 
-    update_state "$STATE_FILE" "retrying" "Iteration $ITERATION ended, restarting in 30s..."
+    # Claude finished turn but work not complete
+    log_message "⚠️  Claude finished turn but work not complete (status: $STATUS)"
+    log_message "Waiting 30 seconds before next iteration..."
+
+    update_state "$STATE_FILE" "retrying" "Iteration $ITERATION ended, continuing..."
 
     sleep 30
 

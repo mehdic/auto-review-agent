@@ -97,9 +97,24 @@ is_implementer_alive() {
     fi
 
     # Check if implementer-loop.sh (bash script) is running under this pane
-    # This is the persistent process, not the temporary 'claude' process
+    # This is the persistent process that manages the Claude session
     pgrep -P "$pane_pid" -f "implementer-loop.sh" >/dev/null 2>&1
-    return $?
+    local loop_running=$?
+
+    # Also check if Claude process is running (implementer-loop starts it)
+    pgrep -P "$pane_pid" "claude" >/dev/null 2>&1
+    local claude_running=$?
+
+    # Both should be running for healthy state
+    if [ $loop_running -eq 0 ] && [ $claude_running -eq 0 ]; then
+        return 0  # Both running, healthy
+    elif [ $loop_running -eq 0 ] && [ $claude_running -ne 0 ]; then
+        # Loop running but Claude crashed - this is recoverable
+        return 0  # Loop will detect and handle
+    else
+        # Loop crashed
+        return 1
+    fi
 }
 
 # Detect if Claude is waiting for input (more robust)
