@@ -91,7 +91,7 @@ while [ $ITERATION -le $MAX_ITERATIONS ]; do
     # Create the implementation prompt
     SAFE_SPEC_NAME=$(echo "$SPEC_NAME" | tr -d '\n\r' | head -c 200)
 
-    PROMPT="You are an autonomous implementer working on: ${SAFE_SPEC_NAME}
+    PROMPT="You are an autonomous developer working on: ${SAFE_SPEC_NAME}
 
 Read the tasks from: $TASKS_FILE
 
