@@ -1,9 +1,11 @@
-# V1 vs V2 Comparison - Communication Fixes
+# Communication Fixes - Before and After
 
 ## Executive Summary
 
-**V1 (Original)**: Has 20+ communication failure scenarios identified in audit
-**V2 (Fixed)**: Addresses all CRITICAL and HIGH severity issues
+**IMPORTANT:** All fixes have been applied to the main scripts. This document shows what was broken and how it was fixed.
+
+**Before (Original)**: Had 20+ communication failure scenarios identified in audit
+**After (Fixed)**: All CRITICAL and HIGH severity issues addressed
 
 ## What Was Fixed
 
@@ -455,57 +457,27 @@ fi
 
 ---
 
-## Which Version Should You Use?
+## Current State
 
-### Use V1 if:
-- You want to test the basic concept
-- You're okay with potential communication failures
-- You'll be monitoring closely and can intervene
+**All fixes have been applied to the main scripts:**
+- `implementer-loop.sh` - Fixed with robust error handling
+- `watchdog-loop.sh` - Fixed with crash recovery and smart detection
+- `launch-autonomous.sh` - Fixed with dependency checks and validation
+- `lib/state-manager.sh` - New helper library for reliable communication
+- `lib/find-spec.sh` - Utility for finding specs by number
 
-### Use V2 if:
-- You have 200+ tasks and need reliability
-- You want autonomous operation without babysitting
-- You need proper error handling and recovery
-- You want to run overnight/unattended
+**To use the system:**
+```bash
+./start-here.sh
+# Or directly:
+./launch-autonomous.sh /path/to/project 001
+```
 
----
-
-## File Mapping
-
-**V1 Files:**
-- `implementer-loop.sh` (original)
-- `watchdog-loop.sh` (original)
-- `launch-autonomous.sh` (original)
-
-**V2 Files:**
-- `implementer-loop-v2.sh` (fixed)
-- `watchdog-loop-v2.sh` (fixed)
-- `launch-autonomous-v2.sh` (fixed)
-- `lib/state-manager.sh` (new helper library)
-
-**Shared:**
-- `lib/find-spec.sh` (works with both)
-- `start-here.sh` (can launch either version)
-
----
-
-## Migration Path
-
-1. **Test V2 first:**
-   ```bash
-   ./launch-autonomous-v2.sh /path/to/project 001
-   ```
-
-2. **Compare behavior:**
-   - Watch both implementations
-   - Check logs for differences
-   - Verify communication reliability
-
-3. **Once confident, update start-here.sh:**
-   - Make V2 the default
-   - Keep V1 as fallback option
-
-4. **Eventually remove V1:**
-   - After sufficient V2 testing
-   - Document any edge cases
-   - Archive V1 for reference
+The system now includes:
+- File locking and atomic writes
+- Claude process detection with auto-restart
+- Comprehensive question/error pattern matching
+- Duplicate response prevention
+- Smart idle detection
+- Exit code handling
+- Path validation and dependency checking

@@ -4,8 +4,9 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load spec finder
+# Load helpers
 source "$SCRIPT_DIR/lib/find-spec.sh"
+source "$SCRIPT_DIR/lib/state-manager.sh"
 
 # Colors
 GREEN='\033[0;32m'
@@ -33,6 +34,24 @@ show_usage() {
     echo "  4. Show you the tmux session"
 }
 
+# Dependency checks
+check_dependencies() {
+    local missing=()
+
+    command -v tmux >/dev/null 2>&1 || missing+=("tmux")
+    command -v python3 >/dev/null 2>&1 || missing+=("python3")
+    command -v jq >/dev/null 2>&1 || missing+=("jq")
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo -e "${RED}ERROR: Missing required dependencies: ${missing[*]}${NC}"
+        echo ""
+        echo "Install them with:"
+        echo "  Ubuntu/Debian: sudo apt install tmux python3 jq"
+        echo "  macOS: brew install tmux python3 jq"
+        exit 1
+    fi
+}
+
 if [ -z "$1" ] || [ -z "$2" ]; then
     show_usage
     exit 1
@@ -41,18 +60,30 @@ fi
 PROJECT_PATH="$1"
 SPEC_NUMBER="$2"
 
+echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}  AUTONOMOUS AGENT SYSTEM${NC}"
+echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo ""
+
+# Check dependencies
+echo -e "${CYAN}Checking dependencies...${NC}"
+check_dependencies
+echo -e "${GREEN}✓ All dependencies found${NC}"
+echo ""
+
 # Resolve project path
 if [ "$PROJECT_PATH" = "." ]; then
     PROJECT_PATH="$(pwd)"
 fi
 
+if [ ! -d "$PROJECT_PATH" ]; then
+    echo -e "${RED}ERROR: Project path does not exist: $PROJECT_PATH${NC}"
+    exit 1
+fi
+
 PROJECT_PATH="$(cd "$PROJECT_PATH" && pwd)"
 
 # Find the spec
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  AUTONOMOUS AGENT SYSTEM${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo ""
 echo -e "${CYAN}Finding spec...${NC}"
 
 SPEC_INFO=$(find_spec "$PROJECT_PATH" "$SPEC_NUMBER")
@@ -65,39 +96,100 @@ fi
 # Parse spec info
 eval "$SPEC_INFO"
 
+if [ ! -f "$TASKS_FILE" ]; then
+    echo -e "${RED}ERROR: Tasks file not found: $TASKS_FILE${NC}"
+    exit 1
+fi
+
 echo -e "${GREEN}✓ Found spec:${NC}"
 echo -e "  Spec: ${CYAN}$SPEC_NAME${NC}"
 echo -e "  Tasks: ${CYAN}$TASKS_FILE${NC}"
 echo ""
 
-# Create session name
+# Check for existing sessions with same spec
+echo -e "${CYAN}Checking for existing sessions...${NC}"
+EXISTING_SESSIONS=$(tmux list-sessions 2>/dev/null | grep "agent_${SPEC_NUMBER}_" | cut -d: -f1)
+
+if [ -n "$EXISTING_SESSIONS" ]; then
+    echo -e "${YELLOW}Found existing session(s) for spec $SPEC_NUMBER:${NC}"
+    echo "$EXISTING_SESSIONS" | while read sess; do
+        echo -e "  - ${YELLOW}$sess${NC}"
+    done
+    echo ""
+    read -p "Kill existing sessions and start fresh? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "$EXISTING_SESSIONS" | while read sess; do
+            echo -e "${CYAN}Killing session: $sess${NC}"
+            tmux kill-session -t "$sess" 2>/dev/null
+        done
+        echo -e "${GREEN}✓ Existing sessions killed${NC}"
+    else
+        echo -e "${RED}Aborted - existing sessions still running${NC}"
+        exit 1
+    fi
+    echo ""
+fi
+
+# Create session name with timestamp
 SESSION_NAME="agent_${SPEC_NUMBER}_$(date +%s)"
 
 echo -e "${CYAN}Creating tmux session: ${YELLOW}$SESSION_NAME${NC}"
 
-# Kill existing sessions with same spec number if exists
-tmux list-sessions 2>/dev/null | grep "^agent_${SPEC_NUMBER}_" | cut -d: -f1 | xargs -I {} tmux kill-session -t {} 2>/dev/null || true
+# Create coordination directory
+COORDINATION_DIR="$PROJECT_PATH/coordination"
+mkdir -p "$COORDINATION_DIR/logs"
+
+# Initialize state file
+echo -e "${CYAN}Initializing state file...${NC}"
+cat > "$COORDINATION_DIR/state.json" << EOF
+{
+  "status": "initializing",
+  "last_update": "$(date -Iseconds)",
+  "message": "System starting up",
+  "current_task": "none",
+  "completed_tasks": [],
+  "total_tasks": 0,
+  "iteration": 0
+}
+EOF
 
 # Create tmux session with windows
 tmux new-session -d -s "$SESSION_NAME" -n "implementer" -c "$PROJECT_PATH"
 
 # Window 0: Implementer
 echo -e "${CYAN}Starting implementer...${NC}"
-tmux send-keys -t "$SESSION_NAME:implementer" "$SCRIPT_DIR/implementer-loop.sh '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
+IMPLEMENTER_SCRIPT="$SCRIPT_DIR/implementer-loop.sh"
+
+if [ ! -f "$IMPLEMENTER_SCRIPT" ]; then
+    echo -e "${RED}ERROR: Implementer script not found: $IMPLEMENTER_SCRIPT${NC}"
+    tmux kill-session -t "$SESSION_NAME"
+    exit 1
+fi
+
+tmux send-keys -t "$SESSION_NAME:implementer" "$IMPLEMENTER_SCRIPT '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
 tmux send-keys -t "$SESSION_NAME:implementer" Enter
 sleep 3
 
 # Window 1: Watchdog
 echo -e "${CYAN}Starting watchdog...${NC}"
+WATCHDOG_SCRIPT="$SCRIPT_DIR/watchdog-loop.sh"
+
+if [ ! -f "$WATCHDOG_SCRIPT" ]; then
+    echo -e "${RED}ERROR: Watchdog script not found: $WATCHDOG_SCRIPT${NC}"
+    tmux kill-session -t "$SESSION_NAME"
+    exit 1
+fi
+
 tmux new-window -t "$SESSION_NAME" -n "watchdog" -c "$PROJECT_PATH"
-tmux send-keys -t "$SESSION_NAME:watchdog" "$SCRIPT_DIR/watchdog-loop.sh '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
+tmux send-keys -t "$SESSION_NAME:watchdog" "$WATCHDOG_SCRIPT '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
 tmux send-keys -t "$SESSION_NAME:watchdog" Enter
 sleep 2
 
 # Window 2: Monitor
 echo -e "${CYAN}Starting monitor...${NC}"
 tmux new-window -t "$SESSION_NAME" -n "monitor" -c "$PROJECT_PATH"
-tmux send-keys -t "$SESSION_NAME:monitor" "watch -n 5 'cat \"$PROJECT_PATH/coordination/state.json\" 2>/dev/null | jq . || echo \"Waiting for state file...\"'"
+tmux send-keys -t "$SESSION_NAME:monitor" "watch -n 5 'echo \"=== State File ===\"  && cat \"$COORDINATION_DIR/state.json\" 2>/dev/null | jq . || echo \"Waiting for state file...\" ; echo \"\" ; echo \"=== Recent Implementer Log ===\" ; tail -20 \"$COORDINATION_DIR/logs/implementer.log\" 2>/dev/null || echo \"No logs yet\"'"
 tmux send-keys -t "$SESSION_NAME:monitor" Enter
 
 # Select implementer window
@@ -113,7 +205,7 @@ echo ""
 echo -e "${CYAN}Windows:${NC}"
 echo -e "  ${GREEN}0: implementer${NC} - Does the work (you can watch Claude here)"
 echo -e "  ${GREEN}1: watchdog${NC}    - Monitors and guides implementer"
-echo -e "  ${GREEN}2: monitor${NC}     - Shows current status"
+echo -e "  ${GREEN}2: monitor${NC}     - Shows current status + logs"
 echo ""
 echo -e "${CYAN}Commands:${NC}"
 echo -e "  Attach:  ${YELLOW}tmux attach -t $SESSION_NAME${NC}"
@@ -122,8 +214,11 @@ echo -e "  Windows: ${YELLOW}Ctrl+b 0/1/2${NC}"
 echo -e "  Stop:    ${YELLOW}tmux kill-session -t $SESSION_NAME${NC}"
 echo ""
 echo -e "${CYAN}Logs:${NC}"
-echo -e "  Implementer: ${YELLOW}tail -f $PROJECT_PATH/coordination/logs/implementer.log${NC}"
-echo -e "  Watchdog:    ${YELLOW}tail -f $PROJECT_PATH/coordination/logs/watchdog.log${NC}"
+echo -e "  Implementer: ${YELLOW}tail -f $COORDINATION_DIR/logs/implementer.log${NC}"
+echo -e "  Watchdog:    ${YELLOW}tail -f $COORDINATION_DIR/logs/watchdog.log${NC}"
+echo ""
+echo -e "${CYAN}State File:${NC}"
+echo -e "  ${YELLOW}cat $COORDINATION_DIR/state.json | jq .${NC}"
 echo ""
 
 read -p "Attach to session now? (y/n) " -n 1 -r
