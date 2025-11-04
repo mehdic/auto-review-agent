@@ -139,6 +139,11 @@ while true; do
             # Generate analysis and solutions using Claude
             REVIEW_PROMPT="You are a senior code reviewer analyzing why an implementer got stuck.
 
+CONTEXT AND MAIN GOAL:
+Our main goal is to complete each and every task specified in the tasks.md file, all while respecting the plan.md and the spec.md file. Nothing should break the constitution defined in the constitution.md file.
+
+The implementer has been working on this tasks.md file, so you should monitor its progress in each call. Maybe also check the changelog to see if some things are missing or are already done. You need to confirm and review the implementer's task. Also provide solutions and ultrathink when needed to propose possible fixes that haven't been tried before. Keep a log file called proposed-solutions.md in the agents folder for each problem and solution you proposed.
+
 Implementer's last output (what they're stuck on):
 \`\`\`
 $IMPLEMENTER_OUTPUT
