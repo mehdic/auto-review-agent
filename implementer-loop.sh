@@ -37,23 +37,25 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] IMPLEMENTER: $1" | tee -a "$LOG_FILE"
 }
 
-# Detect if Claude is waiting for input (shows prompt)
+# Detect if Claude is waiting for input
+# Strategy: Instead of trying to detect absence of working messages,
+# detect PRESENCE of the input prompt (positive signal)
 is_claude_waiting_for_input() {
     local output="$1"
-    # Claude shows status messages while working: "Wandering...", "Hatching...", etc.
-    # When these are gone and output is stable, Claude is waiting for input
 
-    # Check for working indicators
-    if echo "$output" | tail -10 | grep -qE "(Wandering\.\.\.|Hatching\.\.\.|Pondering\.\.\.|Thinking\.\.\.|Working\.\.\.)"; then
-        return 1  # Still working
+    # PRIMARY SIGNAL: Look for the "Message:" prompt that Claude shows
+    # This is what appears when Claude is ready for input
+    if echo "$output" | tail -10 | grep -qE "^Message:"; then
+        return 0  # Definitely waiting for input
     fi
 
-    # Also check for the prompt/message input area
-    if echo "$output" | tail -5 | grep -qE "(Message:|^>|^│)"; then
+    # SECONDARY: Look for input cursor indicators
+    if echo "$output" | tail -5 | grep -qE "(^>|Type a message|Enter your|^│.*│$)"; then
         return 0  # Waiting for input
     fi
 
-    return 1  # Unclear, assume still working
+    # If we DON'T see the prompt, Claude is probably still working
+    return 1  # Not waiting, still working
 }
 
 log_message "═══════════════════════════════════════════════════════════"
@@ -154,12 +156,15 @@ Start working now."
     # Send final Enter to submit
     tmux send-keys -t "$SESSION_NAME:implementer" Enter
 
-    # Wait for Claude to finish processing (detect when it's waiting for input again)
+    # Wait for Claude to finish processing
+    # PRIMARY: Detect output stability (no changes for 20 seconds)
+    # SECONDARY: Look for "Message:" prompt as confirmation
     log_message "Waiting for Claude to finish working..."
     WORK_START_TIME=$(date +%s)
     LAST_ACTIVITY_TIME=$(date +%s)
     LAST_OUTPUT_HASH=""
     STABLE_COUNT=0  # How many checks in a row output has been stable
+    LAST_DETECTION=""
 
     while true; do
         sleep 5
@@ -168,38 +173,52 @@ Start working now."
         # Capture current output
         CURRENT_OUTPUT=$(tmux capture-pane -t "$SESSION_NAME:implementer" -p -S -50)
 
-        # Check if Claude is waiting for input (no "Wandering..." etc)
-        if is_claude_waiting_for_input "$CURRENT_OUTPUT"; then
-            # Output stable? Check if it's been the same for multiple checks
-            OUTPUT_HASH=$(echo "$CURRENT_OUTPUT" | tail -20 | md5sum | cut -d' ' -f1)
+        # Calculate hash of last 20 lines (the "active" area)
+        OUTPUT_HASH=$(echo "$CURRENT_OUTPUT" | tail -20 | md5sum | cut -d' ' -f1)
 
-            if [ "$OUTPUT_HASH" = "$LAST_OUTPUT_HASH" ]; then
-                STABLE_COUNT=$((STABLE_COUNT + 1))
+        # Check if output has changed
+        if [ "$OUTPUT_HASH" = "$LAST_OUTPUT_HASH" ] && [ -n "$LAST_OUTPUT_HASH" ]; then
+            # Output unchanged
+            STABLE_COUNT=$((STABLE_COUNT + 1))
 
-                # If output stable for 4 checks (20 seconds), Claude is done
-                if [ $STABLE_COUNT -ge 4 ]; then
-                    log_message "✅ Claude finished this turn (output stable for 20s)"
-                    CONSECUTIVE_FAILURES=0
-                    break
-                fi
-            else
-                # Output changed, reset counter
-                STABLE_COUNT=0
-                LAST_ACTIVITY_TIME=$CURRENT_TIME
+            # Log every 4 checks (20 seconds)
+            if [ $((STABLE_COUNT % 4)) -eq 0 ]; then
+                STABLE_DURATION=$((STABLE_COUNT * 5))
+                log_message "Output stable for ${STABLE_DURATION}s (checking...)"
             fi
 
-            LAST_OUTPUT_HASH="$OUTPUT_HASH"
+            # Check if we see the "Message:" prompt
+            HAS_PROMPT=$(is_claude_waiting_for_input "$CURRENT_OUTPUT" && echo "yes" || echo "no")
+
+            # If output stable for 20+ seconds AND we see prompt, definitely done
+            if [ $STABLE_COUNT -ge 4 ] && [ "$HAS_PROMPT" = "yes" ]; then
+                log_message "✅ Claude finished (stable 20s + prompt detected)"
+                CONSECUTIVE_FAILURES=0
+                break
+            fi
+
+            # If output stable for 40+ seconds, done even without seeing prompt
+            # (prompt might be scrolled out of view)
+            if [ $STABLE_COUNT -ge 8 ]; then
+                log_message "✅ Claude finished (stable 40s, assuming done)"
+                CONSECUTIVE_FAILURES=0
+                break
+            fi
         else
-            # Still seeing "Wandering..." etc, Claude is actively working
+            # Output changed, Claude is working
+            if [ $STABLE_COUNT -gt 0 ]; then
+                log_message "Output changed after ${STABLE_COUNT} stable checks, Claude resumed working"
+            fi
+
             STABLE_COUNT=0
             LAST_ACTIVITY_TIME=$CURRENT_TIME
-            LAST_OUTPUT_HASH=$(echo "$CURRENT_OUTPUT" | tail -20 | md5sum | cut -d' ' -f1)
+            LAST_OUTPUT_HASH="$OUTPUT_HASH"
         fi
 
-        # Check for total idle timeout (no activity at all)
+        # Check for total idle timeout (no activity for 10 minutes = likely stuck)
         IDLE_TIME=$((CURRENT_TIME - LAST_ACTIVITY_TIME))
         if [ $IDLE_TIME -gt 600 ]; then
-            log_message "⚠️  Claude appears completely idle for $IDLE_TIME seconds"
+            log_message "⚠️  No output changes for $IDLE_TIME seconds - may be stuck"
             # Watchdog will handle this
             break
         fi
