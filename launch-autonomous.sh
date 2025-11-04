@@ -157,8 +157,14 @@ EOF
 # Create tmux session with windows
 tmux new-session -d -s "$SESSION_NAME" -n "implementer" -c "$PROJECT_PATH"
 
-# Window 0: Implementer
-echo -e "${CYAN}Starting implementer...${NC}"
+# Window 0: Start Claude interactively
+echo -e "${CYAN}Starting Claude in implementer window...${NC}"
+tmux send-keys -t "$SESSION_NAME:implementer" "cd '$PROJECT_PATH' && claude"
+tmux send-keys -t "$SESSION_NAME:implementer" Enter
+sleep 3
+
+# Run implementer-loop.sh in background (not in a tmux window)
+echo -e "${CYAN}Starting implementer loop in background...${NC}"
 IMPLEMENTER_SCRIPT="$SCRIPT_DIR/implementer-loop.sh"
 
 if [ ! -f "$IMPLEMENTER_SCRIPT" ]; then
@@ -167,9 +173,11 @@ if [ ! -f "$IMPLEMENTER_SCRIPT" ]; then
     exit 1
 fi
 
-tmux send-keys -t "$SESSION_NAME:implementer" "$IMPLEMENTER_SCRIPT '$PROJECT_PATH' '$TASKS_FILE' '$SPEC_NAME' '$SESSION_NAME'"
-tmux send-keys -t "$SESSION_NAME:implementer" Enter
-sleep 3
+# Run in background with output to log
+nohup "$IMPLEMENTER_SCRIPT" "$PROJECT_PATH" "$TASKS_FILE" "$SPEC_NAME" "$SESSION_NAME" > "$COORDINATION_DIR/logs/implementer-loop.log" 2>&1 &
+IMPLEMENTER_PID=$!
+echo "$IMPLEMENTER_PID" > "$COORDINATION_DIR/implementer.pid"
+sleep 2
 
 # Window 1: Watchdog
 echo -e "${CYAN}Starting watchdog...${NC}"

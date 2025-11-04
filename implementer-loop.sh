@@ -69,11 +69,9 @@ if ! cd "$PROJECT_PATH"; then
     exit 1
 fi
 
-# Start Claude ONCE in this window (NOT in a loop)
-log_message "Starting Claude Code session..."
-tmux send-keys -t "$SESSION_NAME:implementer" "cd '$PROJECT_PATH' && claude"
-tmux send-keys -t "$SESSION_NAME:implementer" Enter
-sleep 3
+# Claude should already be running in the implementer window (started by launch-autonomous.sh)
+log_message "Connecting to Claude session in window: $SESSION_NAME:implementer"
+sleep 2
 
 # Main loop - send prompts to existing Claude session
 ITERATION=1
@@ -143,8 +141,9 @@ Start working now."
     log_message "Sending prompt to Claude..."
 
     # Send prompt line by line to avoid issues
+    # Note: Use -- to prevent lines starting with - from being interpreted as flags
     echo "$PROMPT" | while IFS= read -r line; do
-        tmux send-keys -t "$SESSION_NAME:implementer" "$line"
+        tmux send-keys -t "$SESSION_NAME:implementer" -- "$line"
         tmux send-keys -t "$SESSION_NAME:implementer" Enter
         sleep 0.1
     done
