@@ -190,10 +190,27 @@ IMPLEMENTER_PID=$!
 echo "$IMPLEMENTER_PID" > "$COORDINATION_DIR/implementer.pid"
 sleep 2
 
-# Window 1: Show watchdog log (tech lead activity)
-echo -e "${CYAN}Creating watchdog log viewer...${NC}"
+# Window 1: Tech Lead Dashboard (formatted live view)
+echo -e "${CYAN}Creating tech lead dashboard...${NC}"
 tmux new-window -t "$SESSION_NAME" -n "tech-lead" -c "$PROJECT_PATH"
-tmux send-keys -t "$SESSION_NAME:tech-lead" "tail -f '$COORDINATION_DIR/logs/watchdog.log'"
+
+# Create a formatted dashboard that updates every 3 seconds
+TECH_LEAD_CMD="watch -n 3 -c 'echo \"═══════════════════════════════════════════════════════════\"; \
+echo \"  TECH LEAD DASHBOARD\"; \
+echo \"═══════════════════════════════════════════════════════════\"; \
+echo \"\"; \
+echo \"Last 20 observations:\"; \
+echo \"───────────────────────────────────────────────────────────\"; \
+tail -20 \"$COORDINATION_DIR/logs/watchdog.log\" 2>/dev/null || echo \"Waiting for tech lead to start...\"; \
+echo \"\"; \
+echo \"═══════════════════════════════════════════════════════════\"; \
+echo \"Current Status:\"; \
+echo \"───────────────────────────────────────────────────────────\"; \
+cat \"$COORDINATION_DIR/state.json\" 2>/dev/null | jq -r \".status,.message\" || echo \"Initializing...\"; \
+echo \"\"; \
+echo \"Press Ctrl-C to exit, Ctrl-b 0 for developer window\"'"
+
+tmux send-keys -t "$SESSION_NAME:tech-lead" "$TECH_LEAD_CMD"
 tmux send-keys -t "$SESSION_NAME:tech-lead" Enter
 sleep 1
 
