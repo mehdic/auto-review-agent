@@ -16,6 +16,21 @@ NC='\033[0m' # No Color
 # Cache file for remembering last used values
 CACHE_FILE="$HOME/.auto-impl-cache"
 
+# Helper function to attach to tmux session (handles nested tmux)
+attach_to_session() {
+    local session_name="$1"
+
+    if [ -n "$TMUX" ]; then
+        # We're already in tmux, use switch-client
+        echo -e "${BLUE}Switching to session $session_name...${NC}"
+        tmux switch-client -t "$session_name"
+    else
+        # Not in tmux, use attach-session
+        echo -e "${BLUE}Attaching to session $session_name...${NC}"
+        tmux attach-session -t "$session_name"
+    fi
+}
+
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  Autonomous Implementer System${NC}"
 echo -e "${BLUE}========================================${NC}"
@@ -120,8 +135,8 @@ case $CHOICE in
                 tmux kill-session -t "$SESSION_NAME"
                 echo -e "${BLUE}Killed existing session${NC}"
             else
-                echo -e "${YELLOW}Attaching to existing session...${NC}"
-                tmux attach-session -t "$SESSION_NAME"
+                echo -e "${YELLOW}Connecting to existing session...${NC}"
+                attach_to_session "$SESSION_NAME"
                 exit 0
             fi
         fi
@@ -136,14 +151,18 @@ case $CHOICE in
         echo ""
         echo -e "${BLUE}Session name: $SESSION_NAME${NC}"
         echo ""
-        echo -e "${YELLOW}To attach and watch the implementer:${NC}"
-        echo -e "  tmux attach-session -t $SESSION_NAME"
+        echo -e "${YELLOW}To view the session:${NC}"
+        if [ -n "$TMUX" ]; then
+            echo -e "  tmux switch-client -t $SESSION_NAME   ${BLUE}(or run ./start-here.sh option 2)${NC}"
+        else
+            echo -e "  tmux attach-session -t $SESSION_NAME   ${BLUE}(or run ./start-here.sh option 2)${NC}"
+        fi
         echo ""
-        echo -e "${YELLOW}Inside tmux:${NC}"
-        echo -e "  Ctrl-b 0  - Switch to implementer window"
-        echo -e "  Ctrl-b 1  - Switch to watchdog window"
-        echo -e "  Ctrl-b 2  - Switch to monitor window"
-        echo -e "  Ctrl-b d  - Detach (session keeps running)"
+        echo -e "${YELLOW}Inside the session:${NC}"
+        echo -e "  Ctrl-b 0  - Switch to developer window (see Claude working)"
+        echo -e "  Ctrl-b 1  - Switch to tech lead window (watchdog logs)"
+        echo -e "  Ctrl-b 2  - Switch to monitor window (live state display)"
+        echo -e "  Ctrl-b d  - Detach (session keeps running in background)"
         echo ""
         echo -e "${YELLOW}To stop the session:${NC}"
         echo -e "  ./start-here.sh  (then choose option 3)"
@@ -156,10 +175,9 @@ case $CHOICE in
             exit 1
         fi
 
-        echo -e "${BLUE}Attaching to session $SESSION_NAME...${NC}"
-        echo -e "${YELLOW}Press Ctrl-b d to detach${NC}"
+        echo -e "${YELLOW}Press Ctrl-b d to detach (or Ctrl-b o to switch between sessions)${NC}"
         sleep 2
-        tmux attach-session -t "$SESSION_NAME"
+        attach_to_session "$SESSION_NAME"
         ;;
 
     3)
