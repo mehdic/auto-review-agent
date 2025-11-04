@@ -95,11 +95,28 @@ while true; do
         # Restart background implementer loop
         IMPLEMENTER_SCRIPT="$SCRIPT_DIR/implementer-loop.sh"
         if [ -f "$IMPLEMENTER_SCRIPT" ]; then
-            # Kill old instance if it exists
+            # Kill old instance if it exists and WAIT for it to die
             if [ -f "$PROJECT_PATH/coordination/implementer.pid" ]; then
                 OLD_PID=$(cat "$PROJECT_PATH/coordination/implementer.pid" 2>/dev/null)
-                if [ -n "$OLD_PID" ]; then
-                    kill "$OLD_PID" 2>/dev/null || true
+                if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+                    log_message "Killing old implementer process (PID: $OLD_PID)"
+                    kill -15 "$OLD_PID" 2>/dev/null  # Try SIGTERM first
+
+                    # Wait up to 5 seconds for graceful exit
+                    for i in {1..10}; do
+                        if ! kill -0 "$OLD_PID" 2>/dev/null; then
+                            log_message "Old process exited gracefully"
+                            break
+                        fi
+                        sleep 0.5
+                    done
+
+                    # If still alive, force kill
+                    if kill -0 "$OLD_PID" 2>/dev/null; then
+                        log_message "Force killing stubborn process"
+                        kill -9 "$OLD_PID" 2>/dev/null || true
+                        sleep 1
+                    fi
                 fi
             fi
 

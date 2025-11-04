@@ -115,7 +115,12 @@ Previous status: $(read_state "$STATE_FILE" "status" "unknown")
 
 When you complete 100% of tasks, update $STATE_FILE with status=\"completed\".
 
-IMPORTANT: When you finish your response, make sure the very last word you write is exactly: BAZINGA
+IMPORTANT COMPLETION SIGNAL:
+After you have done substantial work in this iteration (read files, made changes, ran tests, etc.),
+end your response with the word: BAZINGA
+
+DO NOT just say \"I'll start working\" and then BAZINGA - that's wrong!
+ONLY write BAZINGA after you've actually DONE WORK in this iteration.
 
 Start working now."
 
