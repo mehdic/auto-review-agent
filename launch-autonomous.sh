@@ -230,13 +230,25 @@ WATCHDOG_PID=$!
 echo "$WATCHDOG_PID" > "$COORDINATION_DIR/watchdog.pid"
 sleep 2
 
-# Window 2: Monitor
+# Window 2: Monitor (state + activity summary)
 echo -e "${CYAN}Starting monitor...${NC}"
 tmux new-window -t "$SESSION_NAME" -n "monitor" -c "$PROJECT_PATH"
-tmux send-keys -t "$SESSION_NAME:monitor" "watch -n 5 'echo \"=== State File ===\"  && cat \"$COORDINATION_DIR/state.json\" 2>/dev/null | jq . || echo \"Waiting for state file...\" ; echo \"\" ; echo \"=== Recent Implementer Log ===\" ; tail -20 \"$COORDINATION_DIR/logs/implementer.log\" 2>/dev/null || echo \"No logs yet\"'"
+tmux send-keys -t "$SESSION_NAME:monitor" "watch -n 5 'echo \"=== State File ===\"  && cat \"$COORDINATION_DIR/state.json\" 2>/dev/null | jq . || echo \"Waiting for state file...\" ; echo \"\" ; echo \"=== Recent Developer Activity ===\" ; tail -20 \"$COORDINATION_DIR/logs/implementer.log\" 2>/dev/null || echo \"No logs yet\"'"
 tmux send-keys -t "$SESSION_NAME:monitor" Enter
 
-# Select implementer window
+# Window 3: Developer Loop Logs (raw background process output)
+echo -e "${CYAN}Creating developer loop log viewer...${NC}"
+tmux new-window -t "$SESSION_NAME" -n "dev-loop" -c "$PROJECT_PATH"
+tmux send-keys -t "$SESSION_NAME:dev-loop" "tail -f '$COORDINATION_DIR/logs/implementer-loop.log'"
+tmux send-keys -t "$SESSION_NAME:dev-loop" Enter
+
+# Window 4: Tech Lead Loop Logs (raw background process output)
+echo -e "${CYAN}Creating tech lead loop log viewer...${NC}"
+tmux new-window -t "$SESSION_NAME" -n "lead-loop" -c "$PROJECT_PATH"
+tmux send-keys -t "$SESSION_NAME:lead-loop" "tail -f '$COORDINATION_DIR/logs/watchdog-loop.log'"
+tmux send-keys -t "$SESSION_NAME:lead-loop" Enter
+
+# Select developer window (window 0) as default
 tmux select-window -t "$SESSION_NAME:implementer"
 
 echo ""
@@ -247,14 +259,16 @@ echo ""
 echo -e "${CYAN}Session:${NC} ${YELLOW}$SESSION_NAME${NC}"
 echo ""
 echo -e "${CYAN}Windows:${NC}"
-echo -e "  ${GREEN}0: developer${NC}   - Claude Code (interactive developer session)"
-echo -e "  ${GREEN}1: tech-lead${NC}   - Tech lead log (live feedback and observations)"
-echo -e "  ${GREEN}2: monitor${NC}     - State file + recent activity"
+echo -e "  ${GREEN}0: developer${NC}   - Claude Code (watch the developer work)"
+echo -e "  ${GREEN}1: tech-lead${NC}   - Tech lead dashboard (formatted observations)"
+echo -e "  ${GREEN}2: monitor${NC}     - System status (state + activity summary)"
+echo -e "  ${GREEN}3: dev-loop${NC}    - Developer loop logs (background process debug)"
+echo -e "  ${GREEN}4: lead-loop${NC}   - Tech lead loop logs (background process debug)"
 echo ""
 echo -e "${CYAN}Commands:${NC}"
 echo -e "  Attach:  ${YELLOW}tmux attach -t $SESSION_NAME${NC}"
 echo -e "  Detach:  ${YELLOW}Ctrl+b d${NC}"
-echo -e "  Windows: ${YELLOW}Ctrl+b 0/1/2${NC}"
+echo -e "  Windows: ${YELLOW}Ctrl+b 0/1/2/3/4${NC} or ${YELLOW}Ctrl+b n${NC} (next) / ${YELLOW}Ctrl+b p${NC} (previous)"
 echo -e "  Stop:    ${YELLOW}tmux kill-session -t $SESSION_NAME${NC}"
 echo ""
 echo -e "${CYAN}Background Processes:${NC}"
