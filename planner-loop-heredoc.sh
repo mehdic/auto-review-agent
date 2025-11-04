@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generic Planner Loop - Works with ANY spec.md file (TMUX-COMPATIBLE)
+# Generic Planner Loop - Works with ANY spec.md file
 # Continuously implements until all success criteria in spec are met
 
 PROJECT_PATH="$1"
@@ -20,7 +20,6 @@ NC='\033[0m'
 
 # Ensure log directory exists
 mkdir -p "$(dirname "$NOTIFICATION_LOG")"
-mkdir -p "$PROJECT_PATH/coordination/prompts"
 
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] PLANNER: $1" | tee -a "$NOTIFICATION_LOG"
@@ -42,9 +41,7 @@ while true; do
 
         cd "$PROJECT_PATH"
 
-        # Create prompt file (tmux-compatible approach)
-        PROMPT_FILE="$PROJECT_PATH/coordination/prompts/planner_prompt_$$.txt"
-        cat > "$PROMPT_FILE" <<EOF
+        claude <<EOF
 Read the planner instructions from: $PLANNER_PROMPT
 Read the specification from: $SPEC_FILE
 
@@ -62,12 +59,6 @@ Set status to "awaiting_review"
 
 Be thorough and create comprehensive proposals.
 EOF
-
-        # Call claude with prompt file
-        cat "$PROMPT_FILE" | claude 2>&1 | tee -a "$NOTIFICATION_LOG"
-
-        # Clean up prompt file
-        rm -f "$PROMPT_FILE"
 
         log_message "Proposals created, status: awaiting_review"
         sleep 10
@@ -137,9 +128,7 @@ except:
 
     cd "$PROJECT_PATH"
 
-    # Create implementation prompt file
-    IMPL_PROMPT_FILE="$PROJECT_PATH/coordination/prompts/impl_prompt_$$.txt"
-    cat > "$IMPL_PROMPT_FILE" <<EOF
+    claude <<EOF
 You are the implementation agent.
 
 Read the approved proposal: $PROPOSALS_FILE
@@ -162,12 +151,6 @@ DO NOT STOP until the specification's success criteria are fully met.
 
 Begin implementation now.
 EOF
-
-    # Call claude with implementation prompt
-    cat "$IMPL_PROMPT_FILE" | claude 2>&1 | tee -a "$NOTIFICATION_LOG"
-
-    # Clean up
-    rm -f "$IMPL_PROMPT_FILE"
 
     log_message "Implementation session completed"
 
