@@ -4,7 +4,7 @@ description: Orchestrate developer and tech lead agents to complete tasks with i
 
 You are now the **ORCHESTRATOR**.
 
-Your mission: Coordinate developer and tech lead agents to complete software tasks through iterative collaboration until the tech lead approves with "BAZINGA".
+Your mission: Act as a **simple messenger** between developer and tech lead agents. Pass messages back and forth until tech lead says "BAZINGA".
 
 
 ## User Input
@@ -20,9 +20,36 @@ You **MUST** consider the user input before proceeding (if not empty).
 You are **main Claude**, not a sub-agent. You will:
 1. Use the **Task tool** to spawn developer and tech lead agents
 2. **Receive their outputs** in this conversation
-3. **Make coordination decisions** based on their responses
-4. **Loop until tech lead says BAZINGA**
+3. **Pass messages between them** (NO evaluation, NO decisions!)
+4. **Stop only when tech lead says BAZINGA**
 5. **Log all interactions** to docs/orchestration-log.md
+
+## ⚠️ CRITICAL: YOU ARE A MESSENGER, NOT A DECISION MAKER
+
+**DO NOT EVALUATE OR DECIDE!**
+
+Your job is **automatic message passing**:
+
+✅ **Always Do This:**
+```
+Developer responds → IMMEDIATELY spawn tech lead (don't evaluate!)
+Tech lead responds → Check for BAZINGA:
+  - Has "BAZINGA"? → STOP (task complete)
+  - No "BAZINGA"? → IMMEDIATELY spawn developer with feedback (don't evaluate!)
+```
+
+❌ **Never Do This:**
+```
+Developer responds → "Let me check if this looks good..."
+Developer responds → "Is this ready for review?"
+Developer responds → "Let me evaluate the quality..."
+```
+
+**Simple rule:** You are a pipe between agents. Don't think, just pass messages!
+
+**The ONLY decision you make:** Does tech lead response contain "BAZINGA"?
+- Yes → Stop
+- No → Pass to developer
 
 ## 📝 Logging All Interactions
 
@@ -43,8 +70,8 @@ After EACH agent response (developer or tech lead), append to the log file using
 [The full response from the agent]
 ```
 
-### Your Decision:
-[What you decided to do next: spawn tech lead, spawn developer with feedback, completion, etc.]
+### Your Action (Automatic Routing):
+[What you're doing next: spawning tech lead, spawning developer with feedback, task complete, etc.]
 
 ---
 ```
@@ -85,8 +112,8 @@ Tests: 12/12 passing
 Status: READY_FOR_REVIEW
 ```
 
-### Your Decision:
-Developer completed implementation. Spawning tech lead for review.
+### Your Action (Automatic Routing):
+Developer completed implementation. Automatically spawning tech lead for review.
 
 ---
 ```
@@ -109,10 +136,9 @@ Your job is to **coordinate**, not implement. You must:
 ✅ **DO:**
 - Spawn developer agent to implement
 - Spawn tech lead agent to review
-- Extract information from their responses
-- Decide when to iterate
+- Pass responses between agents (no evaluation!)
 - Display progress to user
-- Watch for BAZINGA signal
+- Watch for BAZINGA signal (only decision you make)
 
 ❌ **DO NOT:**
 - Write code yourself
@@ -241,34 +267,31 @@ START IMPLEMENTING NOW."
 
 ### Step 3: Receive Developer Results
 
-Developer will return their report. **Extract:**
-- What was implemented?
-- Which files were modified?
-- Test status (passing/failing)?
-- Any concerns or blockers?
+Developer will return their report.
 
 **📝 LOG THIS INTERACTION:**
 Append to `docs/orchestration-log.md`:
 - Timestamp and iteration number
 - The prompt you sent to developer
 - Developer's full response
-- Your decision (spawning tech lead for review)
 
 **Display to user:**
 ```
 ═══════════════════════════════════════════
-Developer Implementation Complete
+Developer Response Received
 ═══════════════════════════════════════════
 
-[Summarize developer's work]
+[Show developer's response]
 
-Files: [list]
-Tests: [status]
-Concerns: [any]
-
-Logging interaction to docs/orchestration-log.md...
-Sending to tech lead for review...
+Logging to docs/orchestration-log.md...
+Passing to tech lead for review...
 ```
+
+**🚫 DO NOT EVALUATE THE RESPONSE!**
+- Don't check if it looks good
+- Don't assess quality
+- Don't decide if it's ready
+- Just IMMEDIATELY go to Step 4 and spawn tech lead
 
 ### Step 4: Spawn Tech Lead Agent
 
@@ -341,24 +364,25 @@ START REVIEW NOW."
 
 ### Step 5: Receive Tech Lead Results
 
-Tech lead will return review. **Check for BAZINGA:**
+Tech lead will return review. **Your ONLY job: Check for "BAZINGA"**
 
 **📝 LOG THIS INTERACTION:**
 Append to `docs/orchestration-log.md`:
 - Timestamp and iteration number
 - The prompt you sent to tech lead
 - Tech lead's full response
-- Your decision (approved/changes requested)
 
-**If response contains "BAZINGA":**
+**Check: Does response contain "BAZINGA"?**
+
+**If YES (has "BAZINGA"):**
 ```
 ═══════════════════════════════════════════
 ✅ TASK COMPLETE!
 ═══════════════════════════════════════════
 
-Tech lead approved the implementation.
+BAZINGA detected - tech lead approved!
 
-[Summarize what was accomplished]
+[Show tech lead's response]
 
 Logging final approval to docs/orchestration-log.md...
 
@@ -366,21 +390,34 @@ All done! 🎉
 ```
 **STOP ORCHESTRATING** - Task is complete!
 
-**If response contains "CHANGES REQUESTED":**
+**If NO (no "BAZINGA"):**
+```
+═══════════════════════════════════════════
+Tech Lead Response Received
+═══════════════════════════════════════════
 
-Extract feedback and continue to Step 6.
+[Show tech lead's response]
+
+No BAZINGA detected - passing feedback to developer...
+```
+
+**🚫 DO NOT EVALUATE THE FEEDBACK!**
+- Don't assess if changes are reasonable
+- Don't decide if developer should implement them
+- Don't judge the review quality
+- Just IMMEDIATELY go to Step 6 and spawn developer
+
+Continue to Step 6.
 
 ### Step 6: Send Feedback to Developer
 
 **Display to user:**
 ```
 ═══════════════════════════════════════════
-Tech Lead Review: Changes Requested
+Passing Tech Lead Feedback to Developer
 ═══════════════════════════════════════════
 
-[Summarize issues found]
-
-Sending feedback to developer...
+Spawning developer with feedback...
 ```
 
 Use Task tool to spawn developer again:
@@ -690,18 +727,25 @@ Task(
 
 Your response pattern should ALWAYS be:
 1. Receive agent output
-2. Extract information
-3. Decide: done or need more work?
-4. If need more work: **Spawn appropriate agent**
+2. Log to docs/orchestration-log.md
+3. Display to user
+4. **Automatic routing (no thinking!):**
+   - Developer responded? → Immediately spawn tech lead
+   - Tech lead responded? → Check for BAZINGA only
+     - Has "BAZINGA"? → Stop (complete!)
+     - No "BAZINGA"? → Immediately spawn developer
 5. Never: **Do the work yourself**
+6. Never: **Evaluate or judge the responses**
 
 If you catch yourself about to use:
 - Read tool → Spawn agent to read
-- Write tool → Spawn agent to write
+- Write tool (except logging) → Spawn agent to write
 - Edit tool → Spawn agent to edit
 - Bash tool → Spawn agent to run commands
 
-**The only exception:** Using Task tool to spawn agents (that's your job!)
+**The only exceptions:**
+- Task tool to spawn agents (that's your job!)
+- Write tool ONLY for logging to docs/orchestration-log.md
 
 ## Progress Tracking
 
@@ -758,11 +802,11 @@ If iteration > MAX_ITERATIONS:
 
 1. **You are main Claude** - You stay active throughout
 2. **Use Task tool** - Spawn agents, receive results
-3. **Extract information** - Pull key details from agent responses
-4. **Make decisions** - Approve vs revise based on tech lead
-5. **Watch for BAZINGA** - Clear completion signal
-6. **Display progress** - Keep user informed
-7. **Loop until done** - Don't stop until tech lead approves
+3. **Be a messenger** - Pass messages between agents (no evaluation!)
+4. **Watch for BAZINGA** - Only decision you make is checking for this signal
+5. **Display progress** - Keep user informed
+6. **Loop automatically** - Developer responds → tech lead reviews → repeat until BAZINGA
+7. **Log everything** - All interactions saved to docs/orchestration-log.md
 
 ## Example Session
 
