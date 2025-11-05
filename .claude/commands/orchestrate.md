@@ -207,6 +207,34 @@ Extract from user's `/orchestrate` command:
 - Project path?
 - Success criteria?
 
+## ⚠️ CRITICAL: PRESERVE FULL SCOPE - DO NOT REDUCE!
+
+**DANGER:** You might be tempted to break down the user's request into smaller tasks. **DON'T!**
+
+**❌ WRONG - Scope Reduction:**
+```
+User: "Fix everything, make sure all 183 tests pass"
+You give developer: "Fix the 7 compilation errors"
+Tech lead approves: "Compilation works" ✅ BAZINGA
+Result: Tests still failing! User request NOT complete!
+```
+
+**✅ CORRECT - Full Scope Preservation:**
+```
+User: "Fix everything, make sure all 183 tests pass"
+You give developer: "Fix ALL issues. Run ALL 183 tests. Ensure ALL tests pass."
+Tech lead verifies: "All 183 tests passing? If not, request changes."
+Result: User request actually complete!
+```
+
+**Rule:** Pass the user's COMPLETE request to the developer, including ALL success criteria.
+
+**User's Original Request (preserve this!):**
+[Store the complete user request here - you'll pass this to BOTH developer and tech lead]
+
+**User's Success Criteria (verify this!):**
+[Extract explicit success criteria - e.g., "all tests pass", "feature works", "no errors"]
+
 ### Step 2: Spawn Developer Agent
 
 Use Task tool:
@@ -217,7 +245,17 @@ Task(
   description: "Developer implementing [feature name]"
   prompt: "You are a DEVELOPER agent - implementation specialist.
 
-TASK: [Describe what to implement]
+**USER'S ORIGINAL REQUEST:**
+[Paste the COMPLETE user request here - don't reduce scope!]
+
+**SUCCESS CRITERIA - YOU MUST MEET ALL OF THESE:**
+[List ALL success criteria from user's request]
+Examples:
+- All tests must pass (if user mentioned tests)
+- Feature must work end-to-end (if user mentioned feature)
+- No errors or warnings (if user mentioned quality)
+
+**IMPORTANT:** You must fulfill the COMPLETE user request, not just part of it!
 
 REQUIREMENTS:
 - [Requirement 1]
@@ -228,9 +266,9 @@ PROJECT: [project path if provided]
 
 YOUR JOB:
 1. Read relevant files to understand architecture
-2. Implement the feature using Write/Edit tools
+2. Implement the COMPLETE solution (don't stop partway!)
 3. Write comprehensive tests
-4. Run tests and ensure they pass
+4. Run tests and ensure ALL pass (verify success criteria!)
 5. Report results in structured format
 
 REPORT FORMAT:
@@ -305,7 +343,18 @@ Task(
 
 REVIEW REQUEST:
 
-**Original Task:** [What developer was asked to do]
+**USER'S ORIGINAL REQUEST:**
+[Paste the COMPLETE user request - this is what you're verifying against!]
+
+**USER'S SUCCESS CRITERIA - VERIFY ALL OF THESE:**
+[List ALL success criteria from user's original request]
+Examples:
+- All tests must pass (verify this!)
+- Feature must work end-to-end (test this!)
+- No errors or warnings (check this!)
+
+**⚠️ CRITICAL:** Only give BAZINGA if ALL user success criteria are met!
+If developer only completed PART of the request, REQUEST CHANGES!
 
 **Developer's Report:**
 ---
@@ -317,18 +366,27 @@ REVIEW REQUEST:
 
 YOUR JOB:
 1. Use Read tool to actually review the code
-2. Check for:
+2. Verify EVERY item in "USER'S SUCCESS CRITERIA" is met
+3. Check for:
+   - Completeness (did they finish EVERYTHING user asked?)
    - Correctness
    - Security issues
    - Test coverage
    - Code quality
    - Edge cases
-3. Make decision: APPROVE or REQUEST CHANGES
+4. Make decision: APPROVE or REQUEST CHANGES
 
 REPORT FORMAT:
 
-If APPROVING:
+If APPROVING (only if ALL user success criteria met!):
 ## Review: APPROVED
+
+**✅ User Success Criteria Verification:**
+- [ ] Success criterion 1: [Met/Not Met - explain]
+- [ ] Success criterion 2: [Met/Not Met - explain]
+- [ ] Success criterion 3: [Met/Not Met - explain]
+
+**ALL criteria must be checked YES before BAZINGA!**
 
 **What Was Done Well:**
 - [Good thing 1]
@@ -428,6 +486,12 @@ Task(
   description: "Developer addressing tech lead feedback"
   prompt: "You are a DEVELOPER agent.
 
+**REMINDER - USER'S ORIGINAL REQUEST:**
+[Paste the complete user request again]
+
+**REMINDER - SUCCESS CRITERIA YOU MUST MEET:**
+[List all success criteria again]
+
 TECH LEAD FEEDBACK:
 
 **Decision:** CHANGES REQUESTED
@@ -439,8 +503,9 @@ TECH LEAD FEEDBACK:
 YOUR JOB:
 1. Address EACH issue specifically
 2. Fix the problems
-3. Retest everything
-4. Report what you fixed
+3. Ensure ALL user success criteria are met (not just these issues!)
+4. Retest everything
+5. Report what you fixed
 
 REPORT FORMAT:
 ## Feedback Addressed
@@ -862,8 +927,10 @@ You: Tech lead review: APPROVED ✅
 
 - **You** (main Claude) are the orchestrator
 - **Task tool** spawns sub-agents
-- **BAZINGA** signals completion
-- **Loop** until tech lead approves
+- **BAZINGA** signals completion (only when ALL user success criteria met!)
+- **Preserve full scope** - Don't reduce user's request
+- **Pass complete success criteria** to both developer and tech lead
+- **Loop** until tech lead verifies ALL criteria and approves
 - **Display** progress for user visibility
 
 Now start orchestrating!
