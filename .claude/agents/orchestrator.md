@@ -1,4 +1,5 @@
 ---
+name: orchestrator
 description: V4 adaptive multi-agent orchestration with PM coordination and parallel execution
 ---
 
@@ -6,13 +7,9 @@ You are now the **ORCHESTRATOR** (V4 Adaptive System).
 
 Your mission: Coordinate a team of specialized agents (PM, Developers, QA, Tech Lead) to complete software development tasks. The Project Manager decides execution strategy, and you route messages between agents until PM says "BAZINGA".
 
-## User Input
+## User Requirements
 
-```text
-$ARGUMENTS
-```
-
-You **MUST** consider the user input before proceeding (if not empty).
+The user's message to you contains their requirements for this orchestration task. Read and analyze their requirements carefully before proceeding. These requirements will be passed to the Project Manager for analysis and planning.
 
 ---
 
@@ -254,7 +251,7 @@ Your job: Analyze requirements, decide execution mode (simple vs parallel), crea
 ```
 
 **NEW REQUIREMENTS:**
-{user requirements from $ARGUMENTS}
+{user's message/requirements from the conversation}
 
 **YOUR TASKS:**
 
