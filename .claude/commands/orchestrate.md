@@ -28,7 +28,21 @@ You **MUST** consider the user input before proceeding (if not empty).
 - **Message router** - Pass information between agents
 - **State coordinator** - Manage state files for agent "memory"
 - **Progress tracker** - Log all interactions
+- **UI communicator** - Print clear status messages at each step
 - **NEVER implement** - Don't use Read/Edit/Bash for actual work
+
+**UI Status Messages:**
+At each major step, you MUST output a clear message to the user showing what you're doing:
+- `🔄 **ORCHESTRATOR**: [action being taken]`
+- `📨 **ORCHESTRATOR**: Received response from [agent]: [summary]`
+- `👉 **ORCHESTRATOR**: Forwarding to [agent]...`
+- `✅ **ORCHESTRATOR**: [completion message]`
+
+Examples:
+- "🔄 **ORCHESTRATOR**: Spawning Project Manager to analyze requirements..."
+- "📨 **ORCHESTRATOR**: Received decision from PM: PARALLEL MODE (2 developers)"
+- "👉 **ORCHESTRATOR**: Forwarding to Developer (Group A)..."
+- "✅ **ORCHESTRATOR**: Workflow complete - BAZINGA received from PM!"
 
 **Key Change from V3:**
 - V3: Always 2 agents (dev → tech lead → BAZINGA)
@@ -57,18 +71,26 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ### Step 0: Check and Initialize
 
+**UI Message:** Output at start:
+```
+🔄 **ORCHESTRATOR**: Initializing V4 orchestration system...
+```
+
 Before spawning PM, check if this is the first orchestration run:
 
 ```
 1. Check if coordination/ folder exists
 2. If NOT exists:
-   a. Create folder structure
-   b. Initialize state files
-   c. Update .claud.md with V4 reminder
-   d. Generate unique session ID
+   a. Output: "📁 **ORCHESTRATOR**: Creating coordination folder and state files..."
+   b. Create folder structure
+   c. Initialize state files
+   d. Update .claud.md with V4 reminder
+   e. Generate unique session ID
+   f. Output: "✅ **ORCHESTRATOR**: Initialization complete"
 3. If exists:
-   a. Read existing session state
-   b. Continue from previous state
+   a. Output: "📂 **ORCHESTRATOR**: Found existing session, loading state..."
+   b. Read existing session state
+   c. Continue from previous state
 ```
 
 **Create Folder Structure:**
@@ -195,6 +217,11 @@ End: BAZINGA detected from PM
 
 ## Phase 1: Spawn Project Manager
 
+**UI Message:** Output before starting Phase 1:
+```
+📋 **ORCHESTRATOR**: Phase 1 - Spawning Project Manager to analyze requirements...
+```
+
 ### Step 1.1: Read PM State
 
 ```
@@ -204,6 +231,11 @@ state = read_file("coordination/pm_state.json")
 If file doesn't exist or is empty, use default empty state.
 
 ### Step 1.2: Spawn PM with Context
+
+**UI Message:** Output before spawning:
+```
+🔄 **ORCHESTRATOR**: Sending requirements to Project Manager for mode decision...
+```
 
 ```
 Task(
@@ -268,6 +300,15 @@ START YOUR ANALYSIS NOW.
 
 ### Step 1.3: Receive PM Decision
 
+**UI Message:** Output after receiving PM response:
+```
+📨 **ORCHESTRATOR**: Received decision from PM: [MODE] mode with [N] developer(s)
+```
+
+Example outputs:
+- "📨 **ORCHESTRATOR**: Received decision from PM: SIMPLE mode with 1 developer"
+- "📨 **ORCHESTRATOR**: Received decision from PM: PARALLEL mode with 3 developers"
+
 PM will return something like:
 
 ```markdown
@@ -326,11 +367,14 @@ PM chose [mode]. Spawning [N] developer(s) for group(s): [IDs]
 
 ### Step 1.5: Route Based on Mode
 
+**UI Message:** Output routing decision:
 ```
 IF PM chose "simple":
+    Output: "👉 **ORCHESTRATOR**: Routing to Phase 2A (Simple Mode - single developer workflow)"
     → Go to Phase 2A (Simple Mode)
 
 ELSE IF PM chose "parallel":
+    Output: "👉 **ORCHESTRATOR**: Routing to Phase 2B (Parallel Mode - [N] developers working concurrently)"
     → Go to Phase 2B (Parallel Mode)
 ```
 
@@ -338,7 +382,17 @@ ELSE IF PM chose "parallel":
 
 ## Phase 2A: Simple Mode Execution
 
+**UI Message:** Output when entering Phase 2A:
+```
+🚀 **ORCHESTRATOR**: Phase 2A - Starting simple mode execution
+```
+
 ### Step 2A.1: Spawn Single Developer
+
+**UI Message:** Output before spawning:
+```
+👨‍💻 **ORCHESTRATOR**: Spawning Developer for implementation...
+```
 
 ```
 Task(
@@ -392,26 +446,46 @@ START IMPLEMENTING NOW.
 
 ### Step 2A.2: Receive Developer Response
 
+**UI Message:** Output after receiving response:
+```
+📨 **ORCHESTRATOR**: Received status from Developer: [STATUS]
+```
+
+Examples:
+- "📨 **ORCHESTRATOR**: Received status from Developer: READY_FOR_QA"
+- "📨 **ORCHESTRATOR**: Received status from Developer: BLOCKED"
+
 Developer returns status: READY_FOR_QA / BLOCKED / INCOMPLETE
 
 ### Step 2A.3: Route Developer Response
 
+**UI Messages:** Output routing decision:
 ```
 IF status == "READY_FOR_QA":
+    Output: "✅ **ORCHESTRATOR**: Developer complete - forwarding to QA Expert for testing..."
     → Spawn QA Expert (Step 2A.4)
 
 ELSE IF status == "BLOCKED":
+    Output: "⚠️ **ORCHESTRATOR**: Developer blocked - forwarding to Tech Lead for unblocking..."
     → Spawn Tech Lead for unblocking
     → Tech Lead provides solutions
+    Output: "🔄 **ORCHESTRATOR**: Forwarding Tech Lead's solution back to Developer..."
     → Spawn Developer again with solutions
 
 ELSE IF status == "INCOMPLETE":
+    Output: "⚠️ **ORCHESTRATOR**: Developer needs guidance - forwarding to Tech Lead..."
     → Spawn Tech Lead for guidance
     → Tech Lead provides direction
+    Output: "🔄 **ORCHESTRATOR**: Forwarding Tech Lead's guidance back to Developer..."
     → Spawn Developer again with guidance
 ```
 
 ### Step 2A.4: Spawn QA Expert
+
+**UI Message:** Output before spawning:
+```
+🧪 **ORCHESTRATOR**: Spawning QA Expert to run integration, contract, and e2e tests...
+```
 
 ```
 Task(
@@ -457,17 +531,31 @@ START TESTING NOW.
 
 ### Step 2A.5: Route QA Response
 
+**UI Message:** Output after receiving QA response:
+```
+📨 **ORCHESTRATOR**: Received test results from QA Expert: [PASS/FAIL]
+```
+
+**UI Messages:** Output routing decision:
 ```
 IF result == "PASS":
+    Output: "✅ **ORCHESTRATOR**: All tests passed - forwarding to Tech Lead for code review..."
     → Spawn Tech Lead for review (Step 2A.6)
 
 ELSE IF result == "FAIL":
+    Output: "❌ **ORCHESTRATOR**: Tests failed - forwarding failures back to Developer for fixes..."
     → Spawn Developer with QA failures
     → Developer fixes issues
+    Output: "🔄 **ORCHESTRATOR**: Developer fixed issues - sending back to QA Expert for re-testing..."
     → Loop back to QA (Step 2A.4)
 ```
 
 ### Step 2A.6: Spawn Tech Lead for Review
+
+**UI Message:** Output before spawning:
+```
+👔 **ORCHESTRATOR**: Spawning Tech Lead for code quality review...
+```
 
 ```
 Task(
@@ -520,18 +608,32 @@ START REVIEW NOW.
 
 ### Step 2A.7: Route Tech Lead Response
 
+**UI Message:** Output after receiving Tech Lead response:
+```
+📨 **ORCHESTRATOR**: Received review from Tech Lead: [APPROVED/CHANGES_REQUESTED]
+```
+
+**UI Messages:** Output routing decision:
 ```
 IF decision == "APPROVED":
+    Output: "✅ **ORCHESTRATOR**: Code approved by Tech Lead - updating status and forwarding to PM for final check..."
     → Update group_status.json (mark complete)
     → Spawn PM for final check (Step 2A.8)
 
 ELSE IF decision == "CHANGES_REQUESTED":
+    Output: "⚠️ **ORCHESTRATOR**: Changes requested - forwarding feedback to Developer..."
     → Spawn Developer with tech lead feedback
     → Developer addresses issues
+    Output: "🔄 **ORCHESTRATOR**: Developer addressed changes - sending back to QA Expert..."
     → Loop back to QA (Step 2A.4)
 ```
 
 ### Step 2A.8: Spawn PM for Final Check
+
+**UI Message:** Output before spawning:
+```
+📋 **ORCHESTRATOR**: Spawning PM to check if all work is complete...
+```
 
 ```
 Task(
@@ -569,13 +671,22 @@ START YOUR CHECK NOW.
 
 ### Step 2A.9: Check for BAZINGA
 
+**UI Message:** Output after receiving PM response:
+```
+📨 **ORCHESTRATOR**: Received response from PM...
+```
+
+**UI Messages:** Output based on PM decision:
 ```
 IF PM response contains "BAZINGA":
+    Output: "🎉 **ORCHESTRATOR**: BAZINGA received from PM - All work complete!"
+    Output: "✅ **ORCHESTRATOR**: Workflow completed successfully"
     → Log completion
     → Display success message
     → END WORKFLOW ✅
 
 ELSE IF PM assigns more work:
+    Output: "🔄 **ORCHESTRATOR**: PM assigned additional work - continuing workflow..."
     → Extract next assignments
     → Loop back to spawn developers
 ```
@@ -584,7 +695,19 @@ ELSE IF PM assigns more work:
 
 ## Phase 2B: Parallel Mode Execution
 
+**UI Message:** Output when entering Phase 2B:
+```
+🚀 **ORCHESTRATOR**: Phase 2B - Starting parallel mode execution with [N] developers
+```
+
 ### Step 2B.1: Spawn Multiple Developers in Parallel
+
+**UI Message:** Output before spawning (show count):
+```
+👨‍💻 **ORCHESTRATOR**: Spawning [N] developers in parallel for groups: [list groups]
+```
+
+Example: "👨‍💻 **ORCHESTRATOR**: Spawning 3 developers in parallel for groups: A, B, C"
 
 **CRITICAL:** Spawn ALL developers in ONE message (for true parallelism).
 
@@ -657,30 +780,49 @@ START IMPLEMENTING NOW.
 
 ### Step 2B.2: Receive All Developer Responses
 
+**UI Message:** Output as each developer responds:
+```
+📨 **ORCHESTRATOR**: Received status from Developer (Group [X]): [STATUS]
+```
+
+Example: "📨 **ORCHESTRATOR**: Received status from Developer (Group A): READY_FOR_QA"
+
 You'll receive N responses (one from each developer).
 
 **Track each independently** - don't wait for all to finish before proceeding.
 
 ### Step 2B.3: Route Each Developer Response Independently
 
+**UI Messages:** Output routing decision for each group:
+
 For EACH developer response:
 
 ```
 IF status == "READY_FOR_QA":
+    Output: "✅ **ORCHESTRATOR**: Group [X] complete - forwarding to QA Expert..."
     → Spawn QA Expert for that group
 
 ELSE IF status == "BLOCKED":
+    Output: "⚠️ **ORCHESTRATOR**: Group [X] blocked - forwarding to Tech Lead for unblocking..."
     → Spawn Tech Lead to unblock that developer
     → When unblocked, respawn that developer
+    Output: "🔄 **ORCHESTRATOR**: Forwarding unblocking solution back to Developer (Group [X])..."
 
 ELSE IF status == "INCOMPLETE":
+    Output: "⚠️ **ORCHESTRATOR**: Group [X] needs guidance - forwarding to Tech Lead..."
     → Spawn Tech Lead for guidance
+    Output: "🔄 **ORCHESTRATOR**: Forwarding guidance back to Developer (Group [X])..."
     → Respawn that developer with guidance
 ```
 
 **Important:** Each group flows independently. Don't wait for Group A to finish before starting QA for Group B.
 
 ### Step 2B.4: Spawn QA Expert (Per Group)
+
+**UI Message:** Output before spawning each QA:
+```
+🧪 **ORCHESTRATOR**: Spawning QA Expert for Group [X]...
+```
 
 For each developer that returns READY_FOR_QA:
 
@@ -709,18 +851,33 @@ START TESTING NOW.
 
 ### Step 2B.5: Route QA Response (Per Group)
 
+**UI Message:** Output after receiving each QA response:
+```
+📨 **ORCHESTRATOR**: Received test results from QA Expert (Group [X]): [PASS/FAIL]
+```
+
+**UI Messages:** Output routing decision for each group:
+
 For each QA response:
 
 ```
 IF result == "PASS":
+    Output: "✅ **ORCHESTRATOR**: Group [X] tests passed - forwarding to Tech Lead for review..."
     → Spawn Tech Lead for that group
 
 ELSE IF result == "FAIL":
+    Output: "❌ **ORCHESTRATOR**: Group [X] tests failed - forwarding back to Developer..."
     → Spawn Developer for that group with failures
+    Output: "🔄 **ORCHESTRATOR**: Developer fixed Group [X] - sending back to QA..."
     → Loop that group back through QA
 ```
 
 ### Step 2B.6: Spawn Tech Lead (Per Group)
+
+**UI Message:** Output before spawning each Tech Lead:
+```
+👔 **ORCHESTRATOR**: Spawning Tech Lead to review Group [X]...
+```
 
 For each QA that passes:
 
@@ -751,21 +908,40 @@ START REVIEW NOW.
 
 ### Step 2B.7: Route Tech Lead Response (Per Group)
 
+**UI Message:** Output after receiving each Tech Lead response:
+```
+📨 **ORCHESTRATOR**: Received review from Tech Lead (Group [X]): [APPROVED/CHANGES_REQUESTED]
+```
+
+**UI Messages:** Output routing decision for each group:
+
 For each tech lead response:
 
 ```
 IF decision == "APPROVED":
+    Output: "✅ **ORCHESTRATOR**: Group [X] approved - updating status..."
     → Update group_status.json (mark that group complete)
     → Check if ALL assigned groups are complete
-    → If ALL complete: Spawn PM (Step 2B.8)
-    → If NOT all complete: Continue waiting
+    → If ALL complete:
+        Output: "🎯 **ORCHESTRATOR**: All groups approved - forwarding to PM for final check..."
+        Spawn PM (Step 2B.8)
+    → If NOT all complete:
+        Output: "⏳ **ORCHESTRATOR**: Waiting for remaining groups to complete..."
+        Continue waiting
 
 ELSE IF decision == "CHANGES_REQUESTED":
+    Output: "⚠️ **ORCHESTRATOR**: Group [X] needs changes - forwarding back to Developer..."
     → Spawn Developer for that group with feedback
+    Output: "🔄 **ORCHESTRATOR**: Developer addressed Group [X] changes - sending to QA..."
     → Loop that group back through QA → Tech Lead
 ```
 
 ### Step 2B.8: Spawn PM When All Groups Complete
+
+**UI Message:** Output before spawning PM:
+```
+📋 **ORCHESTRATOR**: All groups complete - spawning PM to check if more work needed...
+```
 
 When ALL groups in current phase are approved:
 
@@ -807,13 +983,22 @@ START YOUR CHECK NOW.
 
 ### Step 2B.9: Route PM Response
 
+**UI Message:** Output after receiving PM response:
+```
+📨 **ORCHESTRATOR**: Received response from PM...
+```
+
+**UI Messages:** Output based on PM decision:
 ```
 IF PM response contains "BAZINGA":
+    Output: "🎉 **ORCHESTRATOR**: BAZINGA received from PM - All work complete!"
+    Output: "✅ **ORCHESTRATOR**: Workflow completed successfully"
     → Log completion
     → Display success message
     → END WORKFLOW ✅
 
 ELSE IF PM assigns next batch:
+    Output: "🔄 **ORCHESTRATOR**: PM assigned next batch of work - continuing with [N] more groups..."
     → Extract next groups
     → Loop back to Step 2B.1 with new groups
 ```
