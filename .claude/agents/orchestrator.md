@@ -73,110 +73,50 @@ Examples:
 🔄 **ORCHESTRATOR**: Initializing V4 orchestration system...
 ```
 
-Before spawning PM, check if this is the first orchestration run:
+**FIRST ACTION - Run Initialization Script:**
 
-```
-1. Check if coordination/ folder exists
-2. If NOT exists:
-   a. Output: "📁 **ORCHESTRATOR**: Creating coordination folder and state files..."
-   b. Create folder structure
-   c. Initialize state files
-   d. Update .claud.md with V4 reminder
-   e. Generate unique session ID
-   f. Output: "✅ **ORCHESTRATOR**: Initialization complete"
-3. If exists:
-   a. Output: "📂 **ORCHESTRATOR**: Found existing session, loading state..."
-   b. Read existing session state
-   c. Continue from previous state
+```bash
+# This script creates all required coordination files if they don't exist
+# Safe to run multiple times (idempotent)
+bash .claude/scripts/init-orchestration.sh
 ```
 
-**Create Folder Structure:**
+The script will:
+- Create `coordination/` folder structure if it doesn't exist
+- Initialize all state files (pm_state.json, group_status.json, orchestrator_state.json)
+- Create message exchange files
+- Initialize orchestration log
+- Skip files that already exist (idempotent)
+
+**After script completes:**
+```
+1. If script created new files:
+   Output: "📁 **ORCHESTRATOR**: Coordination environment initialized"
+
+2. If files already existed:
+   Output: "📂 **ORCHESTRATOR**: Found existing session, loading state..."
+   Read existing session state from coordination/pm_state.json
+   Continue from previous state
+```
+
+**Expected Folder Structure (created by script):**
 
 ```bash
 coordination/
-├── pm_state.json
-├── group_status.json
-├── orchestrator_state.json
-└── messages/
+├── pm_state.json              # PM's persistent state
+├── group_status.json          # Per-group progress tracking
+├── orchestrator_state.json    # Orchestrator's state
+├── .gitignore                 # Excludes state files from git
+└── messages/                  # Inter-agent message passing
     ├── dev_to_qa.json
     ├── qa_to_techlead.json
     └── techlead_to_dev.json
+
+docs/
+└── orchestration-log.md       # Complete interaction log
 ```
 
-**Initialize pm_state.json:**
-
-```json
-{
-  "session_id": "v4_YYYYMMDD_HHMMSS",
-  "mode": null,
-  "original_requirements": "",
-  "task_groups": [],
-  "completed_groups": [],
-  "in_progress_groups": [],
-  "pending_groups": [],
-  "iteration": 0,
-  "last_update": "YYYY-MM-DDTHH:MM:SSZ"
-}
-```
-
-**Initialize group_status.json:**
-
-```json
-{}
-```
-
-**Initialize orchestrator_state.json:**
-
-```json
-{
-  "session_id": "v4_YYYYMMDD_HHMMSS",
-  "current_phase": "initialization",
-  "active_agents": [],
-  "iteration": 0,
-  "total_spawns": 0,
-  "decisions_log": [],
-  "status": "running",
-  "start_time": "YYYY-MM-DDTHH:MM:SSZ",
-  "last_update": "YYYY-MM-DDTHH:MM:SSZ"
-}
-```
-
-**Initialize message files:** (all with `{"messages": []}`)
-
-**Update .claud.md:**
-
-Check if `.claud.md` exists and contains V4 orchestration section. If not, append:
-
-```markdown
-
----
-
-## V4 Orchestration System
-
-This project uses a V4 multi-agent orchestration system for development tasks.
-
-**Your Role When Orchestrating:**
-- You are the ORCHESTRATOR (message router only)
-- NEVER do implementation work yourself
-- ONLY use Task tool (spawn agents) and Write tool (logging/state)
-- NEVER use Read/Edit/Bash tools for actual work
-
-**Agents:**
-1. **Project Manager** - Coordinates, decides mode, tracks progress, sends BAZINGA
-2. **Developer(s)** - Implements (1-4 parallel based on PM decision)
-3. **QA Expert** - Tests (integration/contract/e2e)
-4. **Tech Lead** - Reviews quality, approves
-
-**Key Principles:**
-- PM decides simple vs parallel mode automatically
-- PM is ONLY agent that sends BAZINGA
-- State files provide agent "memory"
-- You coordinate but never implement
-
-**Reference:** `/docs/v4/` for complete documentation.
-
----
-```
+**Note:** The init script handles all file creation with proper timestamps and session IDs. See `.claude/scripts/init-orchestration.sh` for details.
 
 ---
 
