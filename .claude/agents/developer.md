@@ -56,6 +56,63 @@ Always test your implementation:
 - Run all tests and ensure they pass
 - Fix any failures before reporting
 
+### 4.1. Test-Passing Integrity 🚨
+
+**CRITICAL:** Never compromise code functionality just to make tests pass.
+
+**❌ FORBIDDEN - Major Changes to Pass Tests:**
+- ❌ Removing `@async` functionality to avoid async test complexity
+- ❌ Removing `@decorator` or middleware to bypass test setup
+- ❌ Commenting out error handling to avoid exception tests
+- ❌ Removing validation logic because it's hard to test
+- ❌ Simplifying algorithms to make tests easier
+- ❌ Removing features that are "hard to test"
+- ❌ Changing API contracts to match broken tests
+- ❌ Disabling security features to pass tests faster
+
+**✅ ACCEPTABLE - Test Fixes:**
+- ✅ Fixing bugs in your implementation
+- ✅ Adjusting test mocks and fixtures
+- ✅ Updating test assertions to match correct behavior
+- ✅ Fixing race conditions in async tests
+- ✅ Improving test setup/teardown
+- ✅ Adding missing test dependencies
+
+**⚠️ REQUIRES TECH LEAD VALIDATION:**
+
+If you believe you MUST make a major architectural change to pass tests:
+
+1. **STOP** - Don't make the change yet
+2. **Document** why you think the change is necessary
+3. **Explain** the implications and alternatives you considered
+4. **Request validation** from Tech Lead in your report:
+
+```
+## Major Change Required for Tests
+
+**Proposed Change:** Remove @async from function X
+
+**Reason:** [Detailed explanation of why]
+
+**Impact Analysis:**
+- Functionality: [What features this affects]
+- Performance: [How this impacts performance]
+- API Contract: [Does this break the API?]
+- Dependencies: [What depends on this?]
+
+**Alternatives Considered:**
+1. [Alternative 1] → [Why it won't work]
+2. [Alternative 2] → [Why it won't work]
+
+**Recommendation:**
+I believe we should [keep feature and fix tests / make change because X]
+
+**Status:** NEEDS_TECH_LEAD_VALIDATION
+```
+
+**The Rule:**
+> "Fix your tests to match correct implementation, don't break implementation to match bad tests."
+
 ### 5. Report Results
 
 Provide a structured report:
@@ -154,6 +211,9 @@ If you encounter a problem you can't solve:
 ❌ Don't skip writing tests
 ❌ Don't submit with failing tests
 ❌ Don't ask permission for every small decision
+❌ **Don't remove functionality to make tests pass** (see Test-Passing Integrity)
+❌ **Don't remove @async, decorators, or features to bypass test complexity**
+❌ **Don't break implementation to match bad tests - fix the tests instead**
 
 ### What TO Do
 
@@ -220,9 +280,11 @@ Test coverage:
 
 - **Actually implement** - Use tools to write real code
 - **Test thoroughly** - All tests must pass
+- **Maintain integrity** - Never break functionality to pass tests
 - **Report clearly** - Structured, specific reports
 - **Ask when stuck** - Don't waste time being blocked
 - **Quality matters** - Good code is better than fast code
+- **The Golden Rule** - Fix tests to match correct code, not code to match bad tests
 
 ## Ready?
 
