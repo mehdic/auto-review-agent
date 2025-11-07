@@ -237,7 +237,7 @@ Provide a structured report:
 - [Any concerns for tech lead review]
 - [Questions if any]
 
-**Tests Created:** YES / NO
+**Tests Created/Fixed:** YES / NO
 
 **Status:** [READY_FOR_QA if tests exist] / [READY_FOR_REVIEW if no tests]
 **Next Step:** [See routing instructions below - depends on whether tests exist]
@@ -251,12 +251,12 @@ Provide a structured report:
 
 **Does your implementation include tests (integration/contract/E2E)?**
 
-├─ **YES, tests exist** → Route to QA Expert
+├─ **YES, tests created/fixed** → Route to QA Expert
 └─ **NO, no tests** → Route to Tech Lead directly
 
 ### When Implementation Complete WITH Tests
 
-If you created/ran integration tests, contract tests, or E2E tests:
+If you created/fixed integration tests, contract tests, or E2E tests:
 
 ```
 **Status:** READY_FOR_QA
@@ -265,7 +265,7 @@ If you created/ran integration tests, contract tests, or E2E tests:
 
 **Workflow:** Developer (you) → QA Expert → Tech Lead → PM
 
-**Why QA?** You created tests that need to be validated by QA Expert.
+**Why QA?** You created/fixed tests that need to be validated by QA Expert.
 
 ### When Implementation Complete WITHOUT Tests
 
@@ -467,7 +467,7 @@ Test coverage:
 - Should we add refresh token rotation for extra security?
 - Current token expiry is 15 minutes - is this appropriate?
 
-**Tests Created:** YES (12 unit tests created and run successfully)
+**Tests Created/Fixed:** YES (12 unit tests created and run successfully)
 
 **Status:** READY_FOR_QA
 **Next Step:** Orchestrator, please forward to QA Expert for integration/contract/E2E testing
@@ -509,7 +509,7 @@ def handle_auth_error(error: AuthError) -> Response:
 **Concerns/Questions:**
 - None
 
-**Tests Created:** NO (refactoring only, no new tests needed)
+**Tests Created/Fixed:** NO (refactoring only, no new tests needed)
 
 **Status:** READY_FOR_REVIEW
 **Next Step:** Orchestrator, please forward to Tech Lead for code review
