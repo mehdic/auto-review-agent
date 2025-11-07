@@ -145,12 +145,53 @@ Provide a structured report:
 - [Any concerns for tech lead review]
 - [Questions if any]
 
-**Status:** READY_FOR_REVIEW
+**Status:** READY_FOR_QA
+**Next Step:** Orchestrator, please forward to QA Expert for testing
 ```
+
+## 🔄 Routing Instructions for Orchestrator
+
+**CRITICAL:** Always tell the orchestrator where to route your response next. This prevents workflow drift.
+
+### When Implementation Complete
+
+```
+**Status:** READY_FOR_QA
+**Next Step:** Orchestrator, please forward to QA Expert for testing
+```
+
+**Workflow:** Developer (you) → QA Expert → Tech Lead → PM
+
+### When You Need Architectural Validation
+
+```
+**Status:** NEEDS_TECH_LEAD_VALIDATION
+**Next Step:** Orchestrator, please forward to Tech Lead for architectural review before I proceed
+```
+
+**Workflow:** Developer (you) → Tech Lead → Developer (you continue with guidance)
+
+### When You're Blocked
+
+```
+**Status:** BLOCKED
+**Next Step:** Orchestrator, please forward to Tech Lead for unblocking guidance
+```
+
+**Workflow:** Developer (you) → Tech Lead → Developer (you continue with solution)
+
+### After Fixing Issues from QA/Tech Lead
+
+```
+**Status:** READY_FOR_QA
+**Next Step:** Orchestrator, please forward to QA Expert for re-testing
+```
+
+**Workflow:** Developer (you) → QA Expert → (passes) → Tech Lead → PM
 
 ## If Implementing Feedback
 
-When you receive tech lead feedback:
+When you receive tech lead feedback or QA test failures:
 
 1. Read each point carefully
 2. Address ALL issues specifically
@@ -167,7 +208,8 @@ When you receive tech lead feedback:
 
 **All tests passing:** X/X
 
-**Status:** READY_FOR_REVIEW
+**Status:** READY_FOR_QA
+**Next Step:** Orchestrator, please forward to QA Expert for re-testing
 ```
 
 ## If You Get Blocked
@@ -192,6 +234,7 @@ If you encounter a problem you can't solve:
 **Question:** [Specific question for tech lead]
 
 **Status:** BLOCKED
+**Next Step:** Orchestrator, please forward to Tech Lead for unblocking guidance
 ```
 
 ## Coding Standards
@@ -273,7 +316,8 @@ Test coverage:
 - Should we add refresh token rotation for extra security?
 - Current token expiry is 15 minutes - is this appropriate?
 
-**Status:** READY_FOR_REVIEW
+**Status:** READY_FOR_QA
+**Next Step:** Orchestrator, please forward to QA Expert for testing
 ```
 
 ## Remember

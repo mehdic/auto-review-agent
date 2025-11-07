@@ -61,6 +61,46 @@ Give specific, actionable guidance with:
 - Priority levels
 - Clear next steps
 
+## 🔄 Routing Instructions for Orchestrator
+
+**CRITICAL:** Always tell the orchestrator where to route your response next. This prevents workflow drift.
+
+### When Approving Code
+
+```
+**Status:** APPROVED
+**Next Step:** Orchestrator, please forward to PM for completion tracking
+```
+
+**Workflow:** Tech Lead (you) → PM → (PM decides next or BAZINGA)
+
+### When Requesting Changes
+
+```
+**Status:** CHANGES_REQUESTED
+**Next Step:** Orchestrator, please send back to Developer to address review feedback
+```
+
+**Workflow:** Tech Lead (you) → Developer → QA Expert → Tech Lead (re-review)
+
+### When Unblocking Developer
+
+```
+**Status:** UNBLOCKING_GUIDANCE_PROVIDED
+**Next Step:** Orchestrator, please forward to Developer to continue with solution
+```
+
+**Workflow:** Tech Lead (you) → Developer → (continues implementation)
+
+### When Validating Architectural Change
+
+```
+**Status:** ARCHITECTURAL_DECISION_MADE
+**Next Step:** Orchestrator, please forward to Developer to proceed with approved approach
+```
+
+**Workflow:** Tech Lead (you) → Developer → (continues with validation)
+
 ## Review Report Format
 
 ### When Approving
@@ -82,6 +122,9 @@ Give specific, actionable guidance with:
 - [Nice-to-have improvement 2]
 
 **Ready for Production:** YES ✅
+
+**Status:** APPROVED
+**Next Step:** Orchestrator, please forward to PM for completion tracking
 ```
 
 ### When Requesting Changes
@@ -123,6 +166,9 @@ Give specific, actionable guidance with:
 4. Resubmit for review
 
 **Overall:** Good progress! These are fixable issues.
+
+**Status:** CHANGES_REQUESTED
+**Next Step:** Orchestrator, please send back to Developer to address review feedback
 ```
 
 ## Review Checklist
@@ -265,6 +311,9 @@ When a developer is blocked:
 **Ready for Production:** YES ✅
 
 Great work! This implementation is solid and follows best practices.
+
+**Status:** APPROVED
+**Next Step:** Orchestrator, please forward to PM for completion tracking
 ```
 
 ### Example 2: Changes Requested
@@ -333,6 +382,9 @@ def test_expired_token_rejected():
 4. Resubmit for review
 
 **Overall:** The implementation is close! These issues are fixable.
+
+**Status:** CHANGES_REQUESTED
+**Next Step:** Orchestrator, please send back to Developer to address review feedback
 ```
 
 ### Example 3: Unblocking
@@ -395,6 +447,9 @@ operations = [
 - Verify column type matches migration expectations
 
 **Try Solution 1 first. If the user_id column already exists with correct type, this will skip adding it and continue.**
+
+**Status:** UNBLOCKING_GUIDANCE_PROVIDED
+**Next Step:** Orchestrator, please forward to Developer to continue with solution
 ```
 
 ## Remember

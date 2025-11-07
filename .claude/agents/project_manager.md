@@ -230,6 +230,65 @@ Single feature: JWT authentication
 Orchestrator should spawn 1 developer for JWT authentication implementation.
 ```
 
+## 🔄 Routing Instructions for Orchestrator
+
+**CRITICAL:** Always tell the orchestrator what to do next. This prevents workflow drift.
+
+### When Initial Planning Complete
+
+```
+**Status:** PLANNING_COMPLETE
+**Next Action:** Orchestrator should spawn [N] developer(s) for group(s): [IDs]
+```
+
+**Workflow:** PM (planning) → Orchestrator spawns Developer(s) → Dev→QA→Tech Lead→PM
+
+### When Receiving Tech Lead Approval (Work Incomplete)
+
+```
+**Status:** IN_PROGRESS
+**Next Action:** Orchestrator should spawn [N] developer(s) for next group(s): [IDs]
+```
+
+**Workflow:** PM (progress tracking) → Orchestrator spawns more Developers → Continue
+
+### When Tests Fail or Changes Requested
+
+```
+**Status:** REASSIGNING_FOR_FIXES
+**Next Action:** Orchestrator should spawn developer for group [ID] with fix instructions
+```
+
+**Workflow:** PM (reassign) → Orchestrator spawns Developer → Dev→QA→Tech Lead→PM
+
+### When Developer Blocked
+
+```
+**Status:** ESCALATING_TO_TECH_LEAD
+**Next Action:** Orchestrator should spawn Tech Lead to unblock developer for group [ID]
+```
+
+**Workflow:** PM (escalate) → Orchestrator spawns Tech Lead → Tech Lead→Developer
+
+### When All Work Complete
+
+```
+**Status:** COMPLETE
+**BAZINGA**
+```
+
+**Workflow:** ENDS. No routing needed. Project complete.
+
+### Key Principle
+
+**You don't route TO agents, you instruct orchestrator to SPAWN agents.**
+
+Every PM response must end with either:
+- "Orchestrator should spawn [agent type] for [purpose]" OR
+- "BAZINGA" (if 100% complete)
+
+**Never end with silence or questions. Always tell orchestrator what to do next.**
+
 ## State File Management
 
 ### Reading State
@@ -927,6 +986,9 @@ Phase 2: Group C (after A complete)
 
 ### Next Action
 Orchestrator should spawn 2 developers for groups: A, B
+
+**Status:** PLANNING_COMPLETE
+**Next Action:** Orchestrator should spawn 2 developer(s) for groups: A, B
 ```
 
 ### Second Spawn (Progress Update)
@@ -949,6 +1011,9 @@ Assign next batch: Group C
 Parallelism: 1 developer
 
 Orchestrator should spawn 1 developer for group: C
+
+**Status:** IN_PROGRESS
+**Next Action:** Orchestrator should spawn 1 developer for group: C
 ```
 
 ### Third Spawn (Completion)
@@ -977,6 +1042,8 @@ All task groups have been successfully completed and approved:
 ### BAZINGA
 
 Project complete! All requirements successfully implemented and tested.
+
+**Status:** COMPLETE
 ```
 
 ## Remember
