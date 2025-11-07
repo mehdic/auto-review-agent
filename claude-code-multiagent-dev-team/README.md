@@ -1,4 +1,6 @@
-# Claude Code Multi-Agent Dev Team
+# BAZINGA - Claude Code Multi-Agent Dev Team
+
+> **Repository:** https://github.com/mehdic/bazinga
 
 A sophisticated multi-agent orchestration system for Claude Code that coordinates autonomous development teams including Project Manager, Developers, QA Expert, and Tech Lead agents working together to complete software projects.
 
@@ -87,35 +89,97 @@ claude-code-multiagent-dev-team/
 
 ## Installation
 
-### Option 1: Install in Existing Claude Code Project
+### Complete File Mapping
 
-1. Copy the agents to your project:
-```bash
-cp -r agents/ .claude/agents/
-```
+Here's where each file from this package should go in your target project:
 
-2. Copy the command:
-```bash
-cp commands/orchestrate.md .claude/commands/
-```
+| Source File | Destination in Your Project | Required? | Purpose |
+|-------------|----------------------------|-----------|---------|
+| `agents/*.md` | `.claude/agents/*.md` | ✅ Yes | Agent definitions (orchestrator, PM, developer, QA, tech lead) |
+| `commands/orchestrate.md` | `.claude/commands/orchestrate.md` | ⚠️ Optional | Slash command version (use if you prefer `/orchestrate`) |
+| `config/claude.md` | `.claude.md` | ✅ Yes | Global orchestrator role enforcement |
+| `scripts/init-orchestration.sh` | `.claude/scripts/init-orchestration.sh` | ✅ Yes | Creates coordination/ folder and state files |
+| `scripts/README.md` | `.claude/scripts/README.md` | 📖 Docs | Script documentation |
+| `config/coordination.gitignore` | `coordination/.gitignore` | ⚠️ Optional | Excludes state files from git (created by init script) |
+| `docs/` | `docs/bazinga/` or keep local | 📖 Docs | Architecture, guides, historical docs |
+| `examples/` | `docs/bazinga/examples/` or keep local | 📖 Docs | Usage examples |
+| `README.md` | Keep as reference | 📖 Docs | This file |
 
-3. Copy the initialization script:
+### Option 1: Quick Install (Essentials Only)
+
+Install just the files needed to run BAZINGA:
+
 ```bash
+# From the bazinga directory, run in your target project:
+cd /path/to/your/project
+
+# 1. Copy agents (required)
+mkdir -p .claude/agents
+cp /path/to/bazinga/agents/*.md .claude/agents/
+
+# 2. Copy initialization script (required)
 mkdir -p .claude/scripts
-cp scripts/init-orchestration.sh .claude/scripts/
+cp /path/to/bazinga/scripts/init-orchestration.sh .claude/scripts/
 chmod +x .claude/scripts/init-orchestration.sh
+
+# 3. Copy global config (required)
+cp /path/to/bazinga/config/claude.md .claude.md
+
+# 4. Optional: Add slash command
+cp /path/to/bazinga/commands/orchestrate.md .claude/commands/
+
+# 5. Run initialization
+bash .claude/scripts/init-orchestration.sh
 ```
 
-4. Copy the global config:
+### Option 2: Full Install (Including Documentation)
+
+Install everything including documentation:
+
 ```bash
-cp config/claude.md .claude.md
+cd /path/to/your/project
+
+# Copy essentials (same as Option 1)
+mkdir -p .claude/agents .claude/scripts .claude/commands
+cp /path/to/bazinga/agents/*.md .claude/agents/
+cp /path/to/bazinga/scripts/* .claude/scripts/
+cp /path/to/bazinga/commands/orchestrate.md .claude/commands/
+cp /path/to/bazinga/config/claude.md .claude.md
+chmod +x .claude/scripts/init-orchestration.sh
+
+# Copy documentation (optional but recommended)
+mkdir -p docs/bazinga
+cp -r /path/to/bazinga/docs/* docs/bazinga/
+cp -r /path/to/bazinga/examples docs/bazinga/
+cp /path/to/bazinga/README.md docs/bazinga/
+
+# Run initialization
+bash .claude/scripts/init-orchestration.sh
 ```
 
-### Option 2: Start New Project
+### Option 3: New Standalone Project
 
-1. Create a new project directory
-2. Copy all files maintaining structure
-3. Initialize git if needed
+Start a fresh project with BAZINGA:
+
+```bash
+# Clone or copy the entire bazinga directory
+cp -r /path/to/bazinga /path/to/new-project
+cd /path/to/new-project
+
+# Restructure to standard layout
+mkdir -p .claude/agents .claude/commands .claude/scripts
+mv agents/* .claude/agents/
+mv commands/* .claude/commands/
+mv scripts/* .claude/scripts/
+mv config/claude.md .claude.md
+rm -rf agents commands config
+
+# Initialize
+bash .claude/scripts/init-orchestration.sh
+
+# Initialize git
+git init
+```
 
 ## Usage
 

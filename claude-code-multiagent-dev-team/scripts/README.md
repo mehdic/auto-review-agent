@@ -1,10 +1,12 @@
 # Orchestration Scripts
 
-This directory contains utility scripts for Claude Code Multi-Agent Dev Team orchestration.
+> **Repository:** https://github.com/mehdic/bazinga
+
+This directory contains utility scripts for BAZINGA (Claude Code Multi-Agent Dev Team) orchestration.
 
 ## init-orchestration.sh
 
-**Purpose:** Initialize the coordination environment for Claude Code Multi-Agent Dev Team orchestration.
+**Purpose:** Initialize the coordination environment for BAZINGA orchestration.
 
 **Usage:**
 ```bash

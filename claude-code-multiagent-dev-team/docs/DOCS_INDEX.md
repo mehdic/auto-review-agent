@@ -1,6 +1,8 @@
-# Claude Code Multi-Agent Dev Team - Documentation Index
+# BAZINGA - Claude Code Multi-Agent Dev Team - Documentation Index
 
-This directory contains comprehensive documentation for the Claude Code Multi-Agent Dev Team.
+> **Repository:** https://github.com/mehdic/bazinga
+
+This directory contains comprehensive documentation for BAZINGA (Claude Code Multi-Agent Dev Team).
 
 ## 📚 Documentation Organization
 
