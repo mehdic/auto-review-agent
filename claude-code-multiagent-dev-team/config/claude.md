@@ -1,6 +1,8 @@
 # Project Context
 
-This project uses a Claude Code Multi-Agent Dev Team orchestration system for complex development tasks.
+> **Repository:** https://github.com/mehdic/bazinga
+
+This project uses BAZINGA (Claude Code Multi-Agent Dev Team) orchestration system for complex development tasks.
 
 ---
 

@@ -1,4 +1,6 @@
-# Claude Code Multi-Agent Dev Team
+# BAZINGA - Claude Code Multi-Agent Dev Team
+
+> **Repository:** https://github.com/mehdic/bazinga
 
 A sophisticated multi-agent orchestration system for Claude Code that coordinates autonomous development teams including Project Manager, Developers, QA Expert, and Tech Lead agents working together to complete software projects.
 
