@@ -1,6 +1,6 @@
-# V4 Orchestration System - Usage Examples
+# Claude Code Multi-Agent Dev Team Orchestration System - Usage Examples
 
-This document provides practical examples of using the V4 Multi-Agent Orchestration System.
+This document provides practical examples of using the Claude Code Multi-Agent Dev Team.
 
 ## Quick Start Examples
 
@@ -411,7 +411,7 @@ This document provides practical examples of using the V4 Multi-Agent Orchestrat
 PM: Some tests are failing. Do you want me to continue fixing them?
 ```
 
-**CORRECT (V4 Behavior):**
+**CORRECT (Current Behavior):**
 ```
 ## PM Status Update
 

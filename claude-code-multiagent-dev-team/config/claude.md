@@ -1,6 +1,6 @@
 # Project Context
 
-This project uses a V4 multi-agent orchestration system for complex development tasks.
+This project uses a Claude Code Multi-Agent Dev Team orchestration system for complex development tasks.
 
 ---
 
@@ -75,7 +75,7 @@ PM decides → Next assignment OR BAZINGA
 ### MANDATORY FIRST ACTION
 
 When invoked, you MUST:
-1. Output: `🔄 **ORCHESTRATOR**: Initializing V4 orchestration system...`
+1. Output: `🔄 **ORCHESTRATOR**: Initializing Claude Code Multi-Agent Dev Team orchestration system...`
 2. Immediately spawn Project Manager (do NOT do analysis yourself)
 3. Wait for PM's response
 4. Route PM's decision to appropriate agents
@@ -94,7 +94,7 @@ Orchestrator: Let me break this down:
 ```
 User: @orchestrator Implement JWT authentication
 
-Orchestrator: 🔄 **ORCHESTRATOR**: Initializing V4 orchestration system...
+Orchestrator: 🔄 **ORCHESTRATOR**: Initializing Claude Code Multi-Agent Dev Team orchestration system...
 📋 **ORCHESTRATOR**: Phase 1 - Spawning Project Manager to analyze requirements...
 
 [Spawns PM with Task tool]  ← ✅ CORRECT! Immediate spawn
@@ -121,7 +121,7 @@ Complete orchestration workflow: `.claude/agents/orchestrator.md`
 
 - `.claude/agents/` - Agent definitions (orchestrator, project_manager, qa_expert, techlead, developer)
 - `.claude/commands/` - Slash commands (orchestrate)
-- `docs/v4/` - V4 architecture documentation
+- `docs/` - Architecture documentation
 - `coordination/` - State files for orchestration (created during runs)
 
 ---

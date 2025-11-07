@@ -1,4 +1,4 @@
-# V4 Multi-Agent Orchestration System - Architecture
+# Claude Code Multi-Agent Dev Team - Architecture
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@
 
 ## System Overview
 
-The V4 Multi-Agent Orchestration System is a hierarchical, stateless agent coordination framework designed for Claude Code. It implements adaptive parallelism, conditional workflow routing, and comprehensive role drift prevention.
+The Claude Code Multi-Agent Dev Team is a hierarchical, stateless agent coordination framework designed for Claude Code. It implements adaptive parallelism, conditional workflow routing, and comprehensive role drift prevention.
 
 ### Core Principles
 
@@ -181,7 +181,7 @@ def decide_execution_mode(features, file_overlap, dependencies):
 **State File Schema**:
 ```json
 {
-  "session_id": "v4_YYYYMMDD_HHMMSS",
+  "session_id": "session_YYYYMMDD_HHMMSS",
   "mode": "simple" | "parallel",
   "mode_reasoning": "string",
   "original_requirements": "string",
@@ -625,7 +625,7 @@ PM decides → Next assignment OR BAZINGA
 **Schema**:
 ```json
 {
-  "session_id": "v4_20250107_120000",
+  "session_id": "session_20250107_120000",
   "mode": "parallel",
   "mode_reasoning": "3 independent features",
   "original_requirements": "User request text",
@@ -675,7 +675,7 @@ PM decides → Next assignment OR BAZINGA
 **Schema**:
 ```json
 {
-  "session_id": "v4_20250107_120000",
+  "session_id": "session_20250107_120000",
   "current_phase": "2B",
   "active_agents": ["developer_A", "developer_B"],
   "iteration": 10,
@@ -713,8 +713,8 @@ PM decides → Next assignment OR BAZINGA
 
 **Output**:
 ```
-🔄 Initializing V4 orchestration system...
-📅 Session ID: v4_20250107_120000
+🔄 Initializing Claude Code Multi-Agent Dev Team orchestration system...
+📅 Session ID: session_20250107_120000
 📁 Creating coordination/ folder structure...
 📝 Creating pm_state.json...
 📝 Creating group_status.json...
@@ -964,12 +964,12 @@ def decide_next_action(state):
 
 ## Conclusion
 
-The V4 Multi-Agent Orchestration System represents a sophisticated approach to coordinating autonomous agents for software development. Its key innovations—adaptive parallelism, conditional routing, and 6-layer role drift prevention—make it uniquely suited for complex, multi-step development tasks while maintaining agent role integrity throughout long conversations.
+The Claude Code Multi-Agent Dev Team represents a sophisticated approach to coordinating autonomous agents for software development. Its key innovations—adaptive parallelism, conditional routing, and 6-layer role drift prevention—make it uniquely suited for complex, multi-step development tasks while maintaining agent role integrity throughout long conversations.
 
 The system is production-ready and can be adapted for various software development workflows and team structures.
 
 ---
 
-**Version**: V4
+**Version**: 1.0
 **Last Updated**: 2025-01-07
 **Authors**: Developed iteratively through collaborative refinement

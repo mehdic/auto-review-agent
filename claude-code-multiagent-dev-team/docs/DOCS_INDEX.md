@@ -1,6 +1,6 @@
-# V4 Multi-Agent Dev Team - Documentation Index
+# Claude Code Multi-Agent Dev Team - Documentation Index
 
-This directory contains comprehensive documentation for the V4 Multi-Agent Orchestration System.
+This directory contains comprehensive documentation for the Claude Code Multi-Agent Dev Team.
 
 ## 📚 Documentation Organization
 
@@ -12,16 +12,16 @@ This directory contains comprehensive documentation for the V4 Multi-Agent Orche
 | **[ROLE_DRIFT_PREVENTION.md](ROLE_DRIFT_PREVENTION.md)** | Detailed explanation of 6-layer defense system | System designers |
 | **[SCOPE_REDUCTION_INCIDENT.md](SCOPE_REDUCTION_INCIDENT.md)** | Case study of orchestrator role drift issue | Troubleshooters |
 
-### Original V4 Documentation
+### Original Development Documentation (Historical)
 
-Located in `original-v4/` - Historical documentation from V4 development:
+Located in `historical-dev-docs/` - Historical documentation from the development:
 
 | Document | Purpose | Content |
 |----------|---------|---------|
-| **[V4_ARCHITECTURE.md](original-v4/V4_ARCHITECTURE.md)** | Original architecture specification | System design, agent roles |
-| **[V4_IMPLEMENTATION_SUMMARY.md](original-v4/V4_IMPLEMENTATION_SUMMARY.md)** | Implementation history and decisions | Development notes |
-| **[V4_STATE_SCHEMAS.md](original-v4/V4_STATE_SCHEMAS.md)** | State file schemas and structures | JSON schemas, examples |
-| **[V4_WORKFLOW_DIAGRAMS.md](original-v4/V4_WORKFLOW_DIAGRAMS.md)** | Visual workflow representations | Diagrams, flow charts |
+| **[V4_ARCHITECTURE.md](historical-dev-docs/V4_ARCHITECTURE.md)** | Original architecture specification | System design, agent roles |
+| **[V4_IMPLEMENTATION_SUMMARY.md](historical-dev-docs/V4_IMPLEMENTATION_SUMMARY.md)** | Implementation history and decisions | Development notes |
+| **[V4_STATE_SCHEMAS.md](historical-dev-docs/V4_STATE_SCHEMAS.md)** | State file schemas and structures | JSON schemas, examples |
+| **[V4_WORKFLOW_DIAGRAMS.md](historical-dev-docs/V4_WORKFLOW_DIAGRAMS.md)** | Visual workflow representations | Diagrams, flow charts |
 
 ## 🎯 Reading Guide
 
@@ -32,8 +32,8 @@ Located in `original-v4/` - Historical documentation from V4 development:
 
 ### For Understanding System Design
 1. **ARCHITECTURE.md** - Complete technical specification
-2. **original-v4/V4_ARCHITECTURE.md** - Original design document
-3. **original-v4/V4_WORKFLOW_DIAGRAMS.md** - Visual representations
+2. **historical-dev-docs/V4_ARCHITECTURE.md** - Original design document
+3. **historical-dev-docs/V4_WORKFLOW_DIAGRAMS.md** - Visual representations
 
 ### For Preventing Issues
 1. **ROLE_DRIFT_PREVENTION.md** - Understanding the 6-layer defense
@@ -41,12 +41,12 @@ Located in `original-v4/` - Historical documentation from V4 development:
 3. **ARCHITECTURE.md** (Role Drift Prevention section)
 
 ### For State Management
-1. **original-v4/V4_STATE_SCHEMAS.md** - Complete schema definitions
+1. **historical-dev-docs/V4_STATE_SCHEMAS.md** - Complete schema definitions
 2. **ARCHITECTURE.md** (State Management section)
 3. **[../scripts/README.md](../scripts/README.md)** - Initialization guide
 
 ### For Development History
-1. **original-v4/V4_IMPLEMENTATION_SUMMARY.md** - Development journey
+1. **historical-dev-docs/V4_IMPLEMENTATION_SUMMARY.md** - Development journey
 2. **SCOPE_REDUCTION_INCIDENT.md** - Key turning point
 3. **ROLE_DRIFT_PREVENTION.md** - Solution evolution
 
@@ -88,25 +88,25 @@ Located in `original-v4/` - Historical documentation from V4 development:
 
 **Use when**: Troubleshooting orchestrator behavior or understanding why certain constraints exist.
 
-### original-v4/V4_ARCHITECTURE.md
+### historical-dev-docs/V4_ARCHITECTURE.md
 **Length**: ~580 lines
 **Focus**: Original system design specifications
 
 **Use when**: You want to see the original vision or compare with current implementation.
 
-### original-v4/V4_IMPLEMENTATION_SUMMARY.md
+### historical-dev-docs/V4_IMPLEMENTATION_SUMMARY.md
 **Length**: ~350 lines
 **Focus**: Development history, decisions, iterations
 
 **Use when**: Understanding why certain design choices were made.
 
-### original-v4/V4_STATE_SCHEMAS.md
+### historical-dev-docs/V4_STATE_SCHEMAS.md
 **Length**: ~710 lines
 **Focus**: JSON schema definitions, examples, validation
 
 **Use when**: Working with state files, debugging state issues, or extending the system.
 
-### original-v4/V4_WORKFLOW_DIAGRAMS.md
+### historical-dev-docs/V4_WORKFLOW_DIAGRAMS.md
 **Length**: ~2,100 lines
 **Focus**: Visual workflow representations, ASCII diagrams
 
@@ -118,11 +118,11 @@ Located in `original-v4/` - Historical documentation from V4 development:
 
 **Agent Behavior**:
 - ARCHITECTURE.md → Agent Definitions section
-- original-v4/V4_ARCHITECTURE.md → Agent specifications
+- historical-dev-docs/V4_ARCHITECTURE.md → Agent specifications
 
 **Workflow Routing**:
 - ARCHITECTURE.md → Routing Mechanism section
-- original-v4/V4_WORKFLOW_DIAGRAMS.md → Visual flows
+- historical-dev-docs/V4_WORKFLOW_DIAGRAMS.md → Visual flows
 - ../examples/EXAMPLES.md → Practical examples
 
 **Role Drift Prevention**:
@@ -131,13 +131,13 @@ Located in `original-v4/` - Historical documentation from V4 development:
 - SCOPE_REDUCTION_INCIDENT.md → Case study
 
 **State Management**:
-- original-v4/V4_STATE_SCHEMAS.md → Schema definitions
+- historical-dev-docs/V4_STATE_SCHEMAS.md → Schema definitions
 - ARCHITECTURE.md → State Management section
 - ../scripts/README.md → Initialization
 
 **Decision Logic**:
 - ARCHITECTURE.md → Decision Logic section
-- original-v4/V4_IMPLEMENTATION_SUMMARY.md → Evolution
+- historical-dev-docs/V4_IMPLEMENTATION_SUMMARY.md → Evolution
 
 **Tool Restrictions**:
 - ARCHITECTURE.md → Tool Restrictions section
@@ -146,7 +146,7 @@ Located in `original-v4/` - Historical documentation from V4 development:
 ### By Question
 
 **"How does the orchestrator decide where to route?"**
-→ ARCHITECTURE.md (Routing Mechanism) + original-v4/V4_WORKFLOW_DIAGRAMS.md
+→ ARCHITECTURE.md (Routing Mechanism) + historical-dev-docs/V4_WORKFLOW_DIAGRAMS.md
 
 **"Why does PM never use Edit tool?"**
 → ARCHITECTURE.md (Tool Restrictions) + ROLE_DRIFT_PREVENTION.md
@@ -155,22 +155,22 @@ Located in `original-v4/` - Historical documentation from V4 development:
 → ARCHITECTURE.md (Workflow Patterns) + ../examples/EXAMPLES.md
 
 **"What's the JSON structure of state files?"**
-→ original-v4/V4_STATE_SCHEMAS.md
+→ historical-dev-docs/V4_STATE_SCHEMAS.md
 
 **"How do I prevent role drift in my own agents?"**
 → ROLE_DRIFT_PREVENTION.md + SCOPE_REDUCTION_INCIDENT.md
 
 **"What happened during development that led to current design?"**
-→ original-v4/V4_IMPLEMENTATION_SUMMARY.md + SCOPE_REDUCTION_INCIDENT.md
+→ historical-dev-docs/V4_IMPLEMENTATION_SUMMARY.md + SCOPE_REDUCTION_INCIDENT.md
 
 **"How do parallel workflows work?"**
-→ ARCHITECTURE.md (Workflow Patterns) + original-v4/V4_WORKFLOW_DIAGRAMS.md
+→ ARCHITECTURE.md (Workflow Patterns) + historical-dev-docs/V4_WORKFLOW_DIAGRAMS.md
 
 ## 📊 Documentation Statistics
 
 **Total Documentation**: ~5,900 lines across 7 files
 **Main Docs**: ~1,600 lines (3 files)
-**Original V4 Docs**: ~3,900 lines (4 files)
+**Original Historical Docs**: ~3,900 lines (4 files)
 **Agent Definitions**: ~4,200 lines (5 files in ../agents/)
 **Examples**: ~350 lines (1 file in ../examples/)
 
@@ -181,7 +181,7 @@ Located in `original-v4/` - Historical documentation from V4 development:
 When adding new documentation:
 
 1. **Main docs/** - For current system specifications
-2. **original-v4/** - Do not modify (historical record)
+2. **historical-dev-docs/** - Do not modify (historical record)
 3. Update this **DOCS_INDEX.md** with new entries
 4. Follow existing formatting conventions
 5. Include practical examples where applicable
@@ -215,5 +215,5 @@ If documentation doesn't answer your question:
 ---
 
 **Last Updated**: 2025-01-07
-**Version**: V4 (Conditional Workflow + 6-Layer Role Drift Prevention)
+**Version**: 1.0 (Conditional Workflow + 6-Layer Role Drift Prevention)
 **Maintained By**: Project contributors

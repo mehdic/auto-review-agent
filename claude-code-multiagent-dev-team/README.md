@@ -1,4 +1,4 @@
-# Claude Code V4 Multi-Agent Development Team
+# Claude Code Multi-Agent Dev Team
 
 A sophisticated multi-agent orchestration system for Claude Code that coordinates autonomous development teams including Project Manager, Developers, QA Expert, and Tech Lead agents working together to complete software projects.
 
@@ -76,7 +76,7 @@ claude-code-multiagent-dev-team/
 │   ├── ARCHITECTURE.md         # Detailed architecture (NEW)
 │   ├── ROLE_DRIFT_PREVENTION.md # 6-layer defense system
 │   ├── SCOPE_REDUCTION_INCIDENT.md # Case study
-│   └── original-v4/            # Original V4 development docs
+│   └── original-v4/            # Original the development docs
 │       ├── V4_ARCHITECTURE.md
 │       ├── V4_IMPLEMENTATION_SUMMARY.md
 │       ├── V4_STATE_SCHEMAS.md
@@ -111,7 +111,7 @@ chmod +x .claude/scripts/init-orchestration.sh
 cp config/claude.md .claude.md
 ```
 
-### Option 2: Start New Project with V4
+### Option 2: Start New Project
 
 1. Create a new project directory
 2. Copy all files maintaining structure
@@ -225,7 +225,7 @@ Each agent has specific tool permissions:
 
 ## Comparison with Other Frameworks
 
-| Feature | V4 System | ChatDev | MetaGPT | AutoGen | CrewAI |
+| Feature | Claude Code Multi-Agent Dev Team | ChatDev | MetaGPT | AutoGen | CrewAI |
 |---------|-----------|---------|---------|---------|--------|
 | Adaptive Parallelism | ✅ (1-4) | ❌ | ❌ | ❌ | ❌ |
 | Conditional Routing | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -301,10 +301,10 @@ MIT License - Feel free to use and adapt for your projects.
 
 ## Version History
 
-- **V4**: Current version with conditional routing and 6-layer role drift prevention
-- **V3**: Previous version (not included)
-- **V2**: Initial multi-agent system (not included)
-- **V1**: Single agent baseline (not included)
+- **Version 1.0**: Current version with conditional routing and 6-layer role drift prevention
+- **Version 0.3**: Previous version (not included)
+- **Version 0.2**: Initial multi-agent system (not included)
+- **Version 0.1**: Single agent baseline (not included)
 
 ## Documentation
 
@@ -317,8 +317,8 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[SCOPE_REDUCTION_INCIDENT.md](docs/SCOPE_REDUCTION_INCIDENT.md)** - Case study of orchestrator role drift
 - **[EXAMPLES.md](examples/EXAMPLES.md)** - Practical usage examples
 
-### Original V4 Development Documentation
-Located in `docs/original-v4/` - Historical documentation from V4 development:
+### Original Development Documentation (Historical)
+Located in `docs/original-v4/` - Historical documentation from the development:
 - **V4_ARCHITECTURE.md** - Original architecture specification (580 lines)
 - **V4_IMPLEMENTATION_SUMMARY.md** - Development history and decisions (350 lines)
 - **V4_STATE_SCHEMAS.md** - Complete JSON schema definitions (710 lines)
@@ -350,4 +350,4 @@ Built for Claude Code using the Claude Agent SDK. Inspired by ChatDev, MetaGPT, 
 
 **Created**: 2025-01-07
 **Last Updated**: 2025-01-07
-**Version**: V4 (Conditional Workflow + 6-Layer Role Drift Prevention)
+**Version**: 1.0 (Conditional Workflow + 6-Layer Role Drift Prevention)

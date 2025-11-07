@@ -1,10 +1,10 @@
 # Orchestration Scripts
 
-This directory contains utility scripts for V4 orchestration.
+This directory contains utility scripts for Claude Code Multi-Agent Dev Team orchestration.
 
 ## init-orchestration.sh
 
-**Purpose:** Initialize the coordination environment for V4 orchestration.
+**Purpose:** Initialize the coordination environment for Claude Code Multi-Agent Dev Team orchestration.
 
 **Usage:**
 ```bash
@@ -30,12 +30,12 @@ bash .claude/scripts/init-orchestration.sh
 **When to run:**
 - Automatically called by orchestrator at startup (Step 0)
 - Can be run manually to reset orchestration state (delete `coordination/` first)
-- Run in new projects to set up V4 orchestration
+- Run in new projects to set up Claude Code Multi-Agent Dev Team orchestration
 
 **Example output:**
 ```
-🔄 Initializing V4 orchestration system...
-📅 Session ID: v4_20251106_122837
+🔄 Initializing Claude Code Multi-Agent Dev Team orchestration system...
+📅 Session ID: session_20251106_122837
 📁 Creating coordination/ folder structure...
 📝 Creating pm_state.json...
 📝 Creating group_status.json...
