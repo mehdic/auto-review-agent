@@ -72,8 +72,17 @@ claude-code-multiagent-dev-team/
 │   ├── claude.md               # Global constraints (.claude.md)
 │   └── coordination.gitignore  # Gitignore for coordination folder
 ├── docs/                        # Documentation
-│   └── ARCHITECTURE.md         # Detailed architecture
-└── examples/                    # Example usage (future)
+│   ├── DOCS_INDEX.md           # Documentation navigation guide
+│   ├── ARCHITECTURE.md         # Detailed architecture (NEW)
+│   ├── ROLE_DRIFT_PREVENTION.md # 6-layer defense system
+│   ├── SCOPE_REDUCTION_INCIDENT.md # Case study
+│   └── original-v4/            # Original V4 development docs
+│       ├── V4_ARCHITECTURE.md
+│       ├── V4_IMPLEMENTATION_SUMMARY.md
+│       ├── V4_STATE_SCHEMAS.md
+│       └── V4_WORKFLOW_DIAGRAMS.md
+└── examples/                    # Example usage
+    └── EXAMPLES.md             # Practical usage examples
 ```
 
 ## Installation
@@ -297,12 +306,41 @@ MIT License - Feel free to use and adapt for your projects.
 - **V2**: Initial multi-agent system (not included)
 - **V1**: Single agent baseline (not included)
 
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+### Main Documentation
+- **[DOCS_INDEX.md](docs/DOCS_INDEX.md)** - Navigation guide to all documentation
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical deep-dive (1,100 lines)
+- **[ROLE_DRIFT_PREVENTION.md](docs/ROLE_DRIFT_PREVENTION.md)** - 6-layer defense system explained
+- **[SCOPE_REDUCTION_INCIDENT.md](docs/SCOPE_REDUCTION_INCIDENT.md)** - Case study of orchestrator role drift
+- **[EXAMPLES.md](examples/EXAMPLES.md)** - Practical usage examples
+
+### Original V4 Development Documentation
+Located in `docs/original-v4/` - Historical documentation from V4 development:
+- **V4_ARCHITECTURE.md** - Original architecture specification (580 lines)
+- **V4_IMPLEMENTATION_SUMMARY.md** - Development history and decisions (350 lines)
+- **V4_STATE_SCHEMAS.md** - Complete JSON schema definitions (710 lines)
+- **V4_WORKFLOW_DIAGRAMS.md** - Visual workflow representations (2,100 lines)
+
+**Total**: Over 10,500 lines of comprehensive documentation
+
+### Quick Links
+- New users → Start with README.md (this file) and EXAMPLES.md
+- Technical details → ARCHITECTURE.md
+- Understanding design → original-v4/V4_IMPLEMENTATION_SUMMARY.md
+- State files → original-v4/V4_STATE_SCHEMAS.md
+- Troubleshooting → SCOPE_REDUCTION_INCIDENT.md
+
 ## Support
 
 For issues or questions:
-- Review the ARCHITECTURE.md documentation
-- Check agent definitions for specific behaviors
-- Examine workflow diagrams in each agent file
+- Review **[docs/DOCS_INDEX.md](docs/DOCS_INDEX.md)** for navigation
+- Check **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for technical details
+- Review **[examples/EXAMPLES.md](examples/EXAMPLES.md)** for usage patterns
+- Examine agent definitions in `agents/` for specific behaviors
+- See **[docs/SCOPE_REDUCTION_INCIDENT.md](docs/SCOPE_REDUCTION_INCIDENT.md)** for common issues
 
 ## Acknowledgments
 
