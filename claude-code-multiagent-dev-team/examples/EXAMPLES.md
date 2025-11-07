@@ -1,6 +1,8 @@
-# Claude Code Multi-Agent Dev Team Orchestration System - Usage Examples
+# BAZINGA - Claude Code Multi-Agent Dev Team - Usage Examples
 
-This document provides practical examples of using the Claude Code Multi-Agent Dev Team.
+> **Repository:** https://github.com/mehdic/bazinga
+
+This document provides practical examples of using BAZINGA (Claude Code Multi-Agent Dev Team).
 
 ## Quick Start Examples
 

@@ -1,4 +1,6 @@
-# Claude Code Multi-Agent Dev Team - Architecture
+# BAZINGA - Claude Code Multi-Agent Dev Team - Architecture
+
+> **Repository:** https://github.com/mehdic/bazinga
 
 ## Table of Contents
 
@@ -13,7 +15,7 @@
 
 ## System Overview
 
-The Claude Code Multi-Agent Dev Team is a hierarchical, stateless agent coordination framework designed for Claude Code. It implements adaptive parallelism, conditional workflow routing, and comprehensive role drift prevention.
+BAZINGA (Claude Code Multi-Agent Dev Team) is a hierarchical, stateless agent coordination framework designed for Claude Code. It implements adaptive parallelism, conditional workflow routing, and comprehensive role drift prevention.
 
 ### Core Principles
 
