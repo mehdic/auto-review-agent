@@ -101,9 +101,9 @@ Here's where each file from this package should go in your target project:
 | `scripts/init-orchestration.sh` | `.claude/scripts/init-orchestration.sh` | ✅ Yes | Creates coordination/ folder and state files |
 | `scripts/README.md` | `.claude/scripts/README.md` | 📖 Docs | Script documentation |
 | `config/coordination.gitignore` | `coordination/.gitignore` | ⚠️ Optional | Excludes state files from git (created by init script) |
-| `docs/` | `docs/bazinga/` or keep local | 📖 Docs | Architecture, guides, historical docs |
-| `examples/` | `docs/bazinga/examples/` or keep local | 📖 Docs | Usage examples |
-| `README.md` | Keep as reference | 📖 Docs | This file |
+| `docs/` | `research/bazinga/` | 📖 Docs | Architecture, guides, historical docs |
+| `examples/` | `research/bazinga/examples/` | 📖 Docs | Usage examples |
+| `README.md` | `research/bazinga/README.md` | 📖 Docs | This file |
 
 ### Option 1: Quick Install (Essentials Only)
 
@@ -148,10 +148,10 @@ cp /path/to/bazinga/config/claude.md .claude.md
 chmod +x .claude/scripts/init-orchestration.sh
 
 # Copy documentation (optional but recommended)
-mkdir -p docs/bazinga
-cp -r /path/to/bazinga/docs/* docs/bazinga/
-cp -r /path/to/bazinga/examples docs/bazinga/
-cp /path/to/bazinga/README.md docs/bazinga/
+mkdir -p research/bazinga
+cp -r /path/to/bazinga/docs/* research/bazinga/
+cp -r /path/to/bazinga/examples research/bazinga/
+cp /path/to/bazinga/README.md research/bazinga/
 
 # Run initialization
 bash .claude/scripts/init-orchestration.sh
